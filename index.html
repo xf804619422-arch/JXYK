@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>映刻 · 原型目录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700;900&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a1026; --bg2:#0d1531;
+    --surface:#121c3b; --surface2:#17234a;
+    --line:rgba(150,170,215,.14);
+    --cyan:#3dd7c4; --cyan-soft:rgba(61,215,196,.14);
+    --gold:#f0b45c; --gold-soft:rgba(240,180,92,.14);
+    --ink:#eef3fb; --muted:#8b98b8; --faint:#5d6a8d;
+    --serif:"Noto Serif SC","Songti SC",serif;
+    --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:var(--sans);color:var(--ink);background:var(--bg);
+    overflow-x:hidden;-webkit-font-smoothing:antialiased;position:relative;
+  }
+  /* 背景氛围 */
+  .bg{position:fixed;inset:0;z-index:-2;background:
+    radial-gradient(1200px 800px at 12% -10%,rgba(37,68,132,.55),transparent 55%),
+    radial-gradient(1000px 700px at 88% 4%,rgba(22,108,105,.32),transparent 55%),
+    radial-gradient(900px 900px at 50% 120%,rgba(120,84,44,.22),transparent 60%),
+    linear-gradient(160deg,#0a1026 0%,#0d1531 48%,#090e22 100%);
+  }
+  .bg .grid{position:absolute;inset:0;background-image:
+    linear-gradient(rgba(160,180,225,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(160,180,225,.045) 1px,transparent 1px);
+    background-size:52px 52px;mask-image:radial-gradient(circle at 50% 38%,#000 0%,transparent 82%);-webkit-mask-image:radial-gradient(circle at 50% 38%,#000 0%,transparent 82%);
+  }
+  .bg .grain{position:absolute;inset:0;opacity:.5;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  }
+  .bg .orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;animation:float 14s ease-in-out infinite}
+  .bg .orb.o1{width:380px;height:380px;background:rgba(61,215,196,.16);top:-90px;left:-70px}
+  .bg .orb.o2{width:320px;height:320px;background:rgba(240,180,92,.12);bottom:-60px;right:-40px;animation-delay:-6s}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-28px)}}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:clamp(34px,6vw,72px) clamp(20px,4vw,48px) 80px;position:relative;z-index:1}
+
+  /* 顶栏 */
+  header{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-bottom:clamp(30px,5vw,58px)}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand-mark{width:48px;height:48px;border-radius:15px;background:linear-gradient(145deg,var(--cyan),#8bf1d9);
+    display:grid;place-items:center;color:#081224;font-family:var(--serif);font-weight:900;font-size:22px;
+    box-shadow:0 8px 26px rgba(61,215,196,.35),inset 0 1px 0 rgba(255,255,255,.5)}
+  .brand-name{font-family:var(--serif);font-weight:900;font-size:22px;letter-spacing:1px}
+  .brand-sub{display:block;color:var(--muted);font-size:12px;letter-spacing:3px;margin-top:3px}
+  .chip{border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:999px;
+    padding:8px 15px;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+  .chip i{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  /* 标题区 */
+  .intro{max-width:680px;margin-bottom:clamp(34px,5vw,56px)}
+  .intro .kicker{color:var(--cyan);font-size:13px;letter-spacing:4px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  .intro .kicker:before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent)}
+  .intro h1{font-family:var(--serif);font-weight:900;font-size:clamp(34px,6vw,58px);line-height:1.14;letter-spacing:1px}
+  .intro h1 em{font-style:normal;background:linear-gradient(100deg,var(--cyan),#8bf1d9 55%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .intro p{margin-top:20px;color:var(--muted);font-size:15px;line-height:1.9;max-width:560px}
+
+  /* 卡片 */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(18px,3vw,30px)}
+  .card{position:relative;display:flex;flex-direction:column;border-radius:26px;overflow:hidden;text-decoration:none;color:var(--ink);
+    background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line);
+    transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s,border-color .45s;cursor:pointer;isolation:isolate}
+  .card:hover{transform:translateY(-8px);border-color:rgba(61,215,196,.4);box-shadow:0 30px 70px rgba(0,0,0,.45),0 0 0 1px rgba(61,215,196,.12)}
+  .card:hover .card-arrow{transform:translateX(5px);color:var(--cyan)}
+  .card:before{content:"";position:absolute;inset:0;z-index:-1;opacity:0;transition:opacity .5s;
+    background:radial-gradient(600px 300px at 50% -10%,rgba(61,215,196,.16),transparent 60%)}
+  .card.mini:before{background:radial-gradient(600px 300px at 50% -10%,rgba(61,215,196,.18),transparent 60%)}
+  .card.admin:before{background:radial-gradient(600px 300px at 50% -10%,rgba(240,180,92,.16),transparent 60%)}
+  .card:hover:before{opacity:1}
+
+  .card-top{position:relative;padding:26px 26px 0}
+  .card-badge{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:2px;font-weight:700;border-radius:999px;padding:7px 13px;margin-bottom:16px}
+  .mini .card-badge{color:var(--cyan);background:var(--cyan-soft);border:1px solid rgba(61,215,196,.28)}
+  .admin .card-badge{color:var(--gold);background:var(--gold-soft);border:1px solid rgba(240,180,92,.28)}
+
+  /* 预览舞台 */
+  .stage{height:230px;position:relative;display:grid;place-items:center;overflow:hidden}
+  .stage:after{content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:66%;height:90px;
+    background:radial-gradient(ellipse at center,rgba(61,215,196,.25),transparent 70%);filter:blur(10px)}
+
+  /* 手机原型 */
+  .phone{width:126px;height:252px;background:#f4f7fb;border-radius:24px;border:5px solid #0b1329;position:relative;z-index:2;
+    box-shadow:0 24px 50px rgba(0,0,0,.5);overflow:hidden;transform:rotate(-3deg);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+  .mini:hover .phone{transform:rotate(0deg) translateY(-4px)}
+  .phone .p-status{height:15px;background:#101a33;display:flex;justify-content:space-between;align-items:center;padding:0 8px}
+  .phone .p-status i{width:20px;height:5px;border-radius:3px;background:#0a1226}
+  .phone .p-status b{font-size:5px;color:#9fd0d8;font-weight:700}
+  .phone .p-body{padding:9px 9px 0;display:flex;flex-direction:column;gap:7px}
+  .p-hero{height:62px;border-radius:9px;background:linear-gradient(135deg,#121c38,#1f3d63);position:relative;overflow:hidden;padding:9px}
+  .p-hero:after{content:"";position:absolute;width:44px;height:44px;border:1px solid rgba(61,215,196,.3);border-radius:50%;right:-16px;top:-16px}
+  .p-hero b{font-size:7px;color:#fff;display:block;font-weight:800}
+  .p-hero span{font-size:4.5px;color:#9fb4cf;display:block;margin-top:3px;line-height:1.4;max-width:70%}
+  .p-hero em{position:absolute;left:9px;bottom:7px;font-style:normal;font-size:5px;background:var(--cyan);color:#0a1226;border-radius:5px;padding:2.5px 6px;font-weight:800}
+  .p-row{display:flex;justify-content:space-between;align-items:center}
+  .p-row b{font-size:6.5px;color:#1a2640}
+  .p-row span{font-size:4.5px;color:#7c8aa3}
+  .p-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+  .p-grid div{background:#fff;border-radius:6px;padding:5px 0;text-align:center;box-shadow:0 2px 5px rgba(18,35,74,.06)}
+  .p-grid i{display:block;width:12px;height:12px;margin:0 auto 3px;border-radius:4px}
+  .p-grid span{font-size:4.5px;color:#6a7891;font-weight:700}
+  .p-grid div:nth-child(1) i{background:#bfe9e4}.p-grid div:nth-child(2) i{background:#f6e0bb}.p-grid div:nth-child(3) i{background:#d8def3}.p-grid div:nth-child(4) i{background:#f4d7d4}
+  .p-movies{display:flex;gap:4px}
+  .p-movies div{flex:1;height:34px;border-radius:6px;background:linear-gradient(150deg,#2b4a78,#6fadc4)}
+  .p-movies div:nth-child(2){background:linear-gradient(150deg,#8a4760,#e3a25f)}
+  .p-movies div:nth-child(3){background:linear-gradient(150deg,#3a2f55,#c07fa0)}
+  .p-nav{position:absolute;bottom:0;left:0;right:0;height:22px;background:#fff;display:flex;align-items:center;justify-content:space-around;border-top:1px solid #e8ecf3}
+  .p-nav i{width:8px;height:8px;border-radius:3px;background:#d4dbe7}
+  .p-nav i.on{background:#2ab9a8}
+
+  /* 后台原型 */
+  .desktop{width:290px;height:178px;background:#0e1830;border-radius:13px;border:1px solid rgba(150,170,215,.18);position:relative;z-index:2;
+    box-shadow:0 26px 55px rgba(0,0,0,.5);overflow:hidden;transform:perspective(800px) rotateX(3deg);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+  .admin:hover .desktop{transform:perspective(800px) rotateX(0) translateY(-4px)}
+  .d-chrome{height:20px;background:#0b1229;display:flex;align-items:center;gap:5px;padding:0 8px;border-bottom:1px solid rgba(150,170,215,.1)}
+  .d-chrome i{width:6px;height:6px;border-radius:50%}
+  .d-chrome i:nth-child(1){background:#f06b5e}.d-chrome i:nth-child(2){background:#f0b45c}.d-chrome i:nth-child(3){background:#3dd7c4}
+  .d-chrome em{margin-left:auto;font-style:normal;font-size:5.5px;color:#5d6a8d;background:#121c3b;border-radius:5px;padding:2px 8px;letter-spacing:.5px}
+  .d-wrap{display:flex;height:calc(100% - 20px)}
+  .d-side{width:58px;background:#0b1329;padding:9px 7px;display:flex;flex-direction:column;gap:7px}
+  .d-logo{width:16px;height:16px;border-radius:5px;background:linear-gradient(145deg,var(--cyan),#8bf1d9);margin-bottom:4px}
+  .d-side b{height:5px;border-radius:3px;background:#253055;width:100%}
+  .d-side b.on{background:#3dd7c4;box-shadow:0 0 8px rgba(61,215,196,.5)}
+  .d-main{flex:1;padding:10px;background:#0e1830;display:flex;flex-direction:column;gap:8px}
+  .d-top{display:flex;justify-content:space-between;align-items:center}
+  .d-top b{font-size:7px;color:#c8d4ea}
+  .d-top span{font-size:5px;color:#5d6a8d;border:1px solid rgba(150,170,215,.18);border-radius:4px;padding:2px 5px}
+  .d-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  .d-stats div{background:#131f3d;border:1px solid rgba(150,170,215,.12);border-radius:6px;padding:6px}
+  .d-stats span{display:block;font-size:4.5px;color:#6a7895}
+  .d-stats b{display:block;font-size:7.5px;color:#fff;margin-top:2px}
+  .d-stats i{display:block;height:3px;border-radius:2px;background:var(--cyan);margin-top:4px;width:70%}
+  .d-chart{flex:1;background:#131f3d;border:1px solid rgba(150,170,215,.12);border-radius:6px;padding:7px;display:flex;flex-direction:column;gap:3px}
+  .d-chart span{font-size:4.5px;color:#6a7895}
+  .d-bars{flex:1;display:flex;align-items:flex-end;gap:4px;padding-top:4px}
+  .d-bars i{flex:1;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#3dd7c4,#1b8f83)}
+  .d-bars i:nth-child(2n){background:linear-gradient(180deg,#f0b45c,#b97f2f)}
+
+  /* 卡片信息 */
+  .card-info{padding:26px;display:flex;flex-direction:column;flex:1}
+  .card-info h2{font-family:var(--serif);font-weight:900;font-size:25px;letter-spacing:1px}
+  .card-info .cn{color:var(--muted);font-size:13px;margin-top:6px;letter-spacing:2px}
+  .card-info .desc{margin-top:16px;color:var(--muted);font-size:13px;line-height:1.85}
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+  .tags span{font-size:11px;color:#a7b3ce;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .card-foot{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+  .card-arrow{display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:700;color:var(--ink);transition:color .3s,transform .3s}
+  .card-arrow b{font-size:18px;font-weight:400}
+  .card-count{font-size:11px;color:var(--faint);letter-spacing:1px}
+
+  footer{margin-top:clamp(30px,4vw,48px);text-align:center;color:var(--faint);font-size:12px;letter-spacing:1px;line-height:2}
+  footer b{color:var(--muted)}
+
+  /* 入场动画 */
+  .reveal{opacity:0;transform:translateY(26px)}
+  .reveal.in{opacity:1;transform:none;transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1)}
+
+  @media(max-width:860px){
+    .cards{grid-template-columns:1fr}
+    .desktop{width:100%;max-width:340px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    .bg .orb{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="bg">
+  <div class="grid"></div>
+  <div class="orb o1"></div>
+  <div class="orb o2"></div>
+  <div class="grain"></div>
+</div>
+
+<div class="wrap">
+  <header class="reveal">
+    <div class="brand">
+      <div class="brand-mark">映</div>
+      <div>
+        <div class="brand-name">映刻 YINGKE</div>
+        <span class="brand-sub">影院映前广告投放平台</span>
+      </div>
+    </div>
+    <div class="chip"><i></i>原型导航 · Prototype Directory</div>
+  </header>
+
+  <div class="intro">
+    <div class="kicker reveal">PROTOTYPE CATALOG</div>
+    <h1 class="reveal">一套系统，<em>双端体验</em><br>从广告主到运营后台</h1>
+    <p class="reveal">面向广告主的微信小程序与面向内部运营的管理后台。选择下方入口，进入对应的高保真交互原型。</p>
+  </div>
+
+  <section class="cards">
+    <!-- 小程序原型 -->
+    <a class="card mini reveal" href="cinema-ad-miniapp.html" data-tilt>
+      <div class="card-top">
+        <span class="card-badge">C 端 · 微信小程序</span>
+        <div class="stage">
+          <div class="phone">
+            <div class="p-status"><i></i><b>9:41</b><i></i></div>
+            <div class="p-body">
+              <div class="p-hero">
+                <b>映前广告投放</b>
+                <span>热门影片 · 附近影院</span>
+                <em>开始投放</em>
+              </div>
+              <div class="p-row"><b>快速入口</b><span>查看全部</span></div>
+              <div class="p-grid">
+                <div><i></i><span>影院</span></div>
+                <div><i></i><span>影片</span></div>
+                <div><i></i><span>订单</span></div>
+                <div><i></i><span>我的</span></div>
+              </div>
+              <div class="p-row"><b>热门影片</b><span>更多</span></div>
+              <div class="p-movies"><div></div><div></div><div></div></div>
+            </div>
+            <div class="p-nav"><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-info">
+        <h2>小程序原型</h2>
+        <span class="cn">广告主自助投放端</span>
+        <p class="desc">覆盖首页引流、影院检索、排期选位、购物车、下单签约、支付钱包、素材上刊、订单验收、分销与包场询价等完整广告主流程。</p>
+        <div class="tags">
+          <span>首页</span><span>影院投放</span><span>排期选位</span><span>订单</span><span>合同支付</span><span>我的</span>
+        </div>
+        <div class="card-foot">
+          <span class="card-count">MINI PROGRAM</span>
+          <span class="card-arrow">进入原型 <b>→</b></span>
+        </div>
+      </div>
+    </a>
+
+    <!-- 管理后台原型 -->
+    <a class="card admin reveal" href="admin.html" data-tilt>
+      <div class="card-top">
+        <span class="card-badge">B 端 · 管理后台</span>
+        <div class="stage">
+          <div class="desktop">
+            <div class="d-chrome"><i></i><i></i><i></i><em>yingke.admin</em></div>
+            <div class="d-wrap">
+              <div class="d-side">
+                <div class="d-logo"></div>
+                <b class="on"></b><b></b><b></b><b></b><b></b><b></b><b></b>
+              </div>
+              <div class="d-main">
+                <div class="d-top"><b>经营概览</b><span>今日</span></div>
+                <div class="d-stats">
+                  <div><span>营收</span><b>¥1.28w</b><i></i></div>
+                  <div><span>上刊率</span><b>96%</b><i style="width:90%"></i></div>
+                  <div><span>待办</span><b>23</b><i style="width:55%;background:var(--gold)"></i></div>
+                </div>
+                <div class="d-chart">
+                  <span>近 7 日投放趋势</span>
+                  <div class="d-bars"><i style="height:38%"></i><i style="height:58%"></i><i style="height:44%"></i><i style="height:72%"></i><i style="height:62%"></i><i style="height:88%"></i><i style="height:78%"></i></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-info">
+        <h2>管理后台原型</h2>
+        <span class="cn">内部运营 · 客服 · 财务</span>
+        <p class="desc">覆盖影院与影片管理、排期库存、订单合同、素材上刊、客户资质、财务返本退款、发票、客服消息、分销、包场询价与系统权限等管理端能力。</p>
+        <div class="tags">
+          <span>影院管理</span><span>排期库存</span><span>订单合同</span><span>素材上刊</span><span>财务发票</span><span>系统权限</span>
+        </div>
+        <div class="card-foot">
+          <span class="card-count">ADMIN CONSOLE</span>
+          <span class="card-arrow">进入原型 <b>→</b></span>
+        </div>
+      </div>
+    </a>
+  </section>
+
+  <footer class="reveal">
+    映刻 YINGKE · 影院映前广告投放平台<br>
+    原型目录 <b>index.html</b> — 小程序端 / 管理后台端
+  </footer>
+</div>
+
+<script>
+  // 入场动画
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e,i){
+        if(e.isIntersecting){
+          e.target.style.transitionDelay = (e.target.dataset.delay || (Math.min(i,4)*80)) + 'ms';
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    },{threshold:.15});
+    els.forEach(function(el){ io.observe(el); });
+  })();
+
+  // 卡片微倾斜
+  (function(){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cards = document.querySelectorAll('.card[data-tilt]');
+    cards.forEach(function(card){
+      card.addEventListener('mousemove', function(e){
+        var r = card.getBoundingClientRect();
+        var x = (e.clientX - r.left) / r.width - .5;
+        var y = (e.clientY - r.top) / r.height - .5;
+        card.style.transform = 'translateY(-8px) rotateX(' + (-y*3).toFixed(2) + 'deg) rotateY(' + (x*4).toFixed(2) + 'deg)';
+      });
+      card.addEventListener('mouseleave', function(){
+        card.style.transform = '';
+      });
+    });
+  })();
+</script>
+</body>
+</html>
