@@ -461,6 +461,35 @@
   .od-change{background:var(--amber-soft);border:1px solid rgba(232,162,60,.4);border-radius:11px;padding:13px 15px}
   .od-change b{color:var(--amber);font-size:13px}
   .od-change p{font-size:12px;color:var(--muted);margin:7px 0 0;line-height:1.6}
+  .od-countdown{display:flex;align-items:center;gap:12px;border:1px solid rgba(232,162,60,.42);background:var(--amber-soft);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+  .od-countdown .cd-ico{width:38px;height:38px;border-radius:10px;background:rgba(240,180,92,.18);color:var(--amber);display:grid;place-items:center;font-size:18px;flex:none}
+  .od-countdown .cd-copy{flex:1;min-width:0}
+  .od-countdown .cd-copy b{display:block;font-size:13px;color:var(--amber)}
+  .od-countdown .cd-copy span{display:block;font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4}
+  .od-countdown .cd-time{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--amber);letter-spacing:.5px;white-space:nowrap}
+  .file-link{display:inline-flex;align-items:center;gap:8px;color:var(--cyan);cursor:pointer;text-decoration:none;font-size:13px}
+  .file-link:hover{text-decoration:underline}
+  .file-link .f-ico{width:24px;height:24px;border-radius:6px;background:var(--cyan-soft);color:var(--cyan);display:grid;place-items:center;font-size:12px;flex:none}
+  .media-modal{position:fixed;inset:0;z-index:90;background:rgba(4,8,20,.82);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
+  .media-modal.open{display:flex}
+  .media-modal .media-dialog{width:760px;max-width:96vw;background:var(--bg2);border:1px solid var(--line-strong);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.7)}
+  .media-modal .media-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .media-modal .media-head h3{font-family:var(--serif);font-size:15px;font-weight:700}
+  .media-modal .media-head .close{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:18px;cursor:pointer}
+  .media-modal .media-head .close:hover{color:var(--red);border-color:var(--red)}
+  .media-body{display:grid;place-items:center;background:#05070f;padding:22px;min-height:220px}
+  .media-body video{width:100%;max-height:62vh;border-radius:10px;background:#000}
+  .media-body img{max-width:100%;max-height:64vh;border-radius:10px;border:1px solid var(--line)}
+
+  /* 转账凭证上传 / 展示 */
+  .receipt-upload{border:1px dashed var(--line-strong);border-radius:12px;padding:26px 20px;text-align:center;cursor:pointer;transition:all .16s;background:var(--surface)}
+  .receipt-upload:hover{border-color:var(--cyan);background:var(--surface2)}
+  .receipt-empty{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted)}
+  .receipt-empty svg{width:36px;height:36px;color:var(--cyan)}
+  .receipt-empty b{font-size:13px;color:var(--ink)}
+  .receipt-empty span{font-size:11px;color:var(--faint)}
+  .receipt-preview img{max-width:100%;max-height:260px;border-radius:10px;border:1px solid var(--line);display:block;margin:0 auto}
+  .receipt-show img{max-width:100%;max-height:240px;border-radius:10px;border:1px solid var(--line)}
 
   /* 包场询价单 */
   .od-status.ic-pending{background:linear-gradient(135deg,#5a3d1f,#c07a2f)}
@@ -737,7 +766,7 @@ const MENU = [
   { group:'订单与交付', items:[
     { id:'orders',   label:'订单管理',   icon:'orders',   desc:'订单列表、确认到账、素材审核、状态跟踪' },
     { id:'package',  label:'包场询价单', icon:'package',  desc:'询价单池、处理流转、报价录入、履约结算、转化统计' },
-    { id:'publish',  label:'上刊管理',   icon:'publish',  desc:'素材审核、素材规范配置、样片确认、交付与回传' },
+    { id:'publish',  label:'上刊管理',   icon:'publish',  desc:'素材审核、样片上传、监播证上传、交付与回传' },
     { id:'contract', label:'合同管理',   icon:'contract', desc:'模板维护（折扣版/权益版）、签署跟踪、归档' },
   ]},
   { group:'客户与营销', items:[
@@ -2064,22 +2093,31 @@ const PLACING_SUB = {
   reject: { label:'素材已驳回', cls:'red' },
 };
 const EYE_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg>';
+const DEMO_VIDEO = 'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4';
 
 const ORDER_SEED = [
-  { id:'YK20260920008', customer:'星汉文化传媒有限公司', name:'CGV影城（长沙岳麓店）', date:'2026/09/27–10/03', price:25200, qty:7, key:'pay', payMode:'原价权益支付', method:'对公转账（待确认）', orderTime:'2026/09/20 14:22' },
-  { id:'YK20260921016', customer:'林间品牌咨询有限公司', name:'万达影城（长沙开福店）', date:'2026/09/24–09/30', price:15400, qty:4, key:'placing', sub:'review', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/21 09:05', payTime:'2026/09/21 09:06', material:{ name:'林间_15s_1080p.mp4', size:'96MB', duration:'15 秒', resolution:'1920×1080' } },
-  { id:'YK20260913015', customer:'湖南鼎信广告有限公司', name:'万达影城（长沙梅溪湖店）', date:'2026/09/30–10/06', price:22400, qty:5, key:'placing', sub:'upload', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/13 16:40', payTime:'2026/09/13 16:41' },
-  { id:'YK20260915022', customer:'长沙云图设计有限公司', name:'博纳国际影城（长沙天心店）', date:'2026/09/18–09/24', price:16800, qty:7, key:'placing', sub:'reject', rejectReason:'素材分辨率不足 1080P，请重新导出后上传', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/15 09:05', payTime:'2026/09/15 09:06', material:{ name:'云图_15s.mp4', size:'52MB', duration:'15 秒', resolution:'1280×720' } },
-  { id:'YK20260918012', customer:'苏州拾光文化传播有限公司', name:'潇湘国际影城（长沙岳麓店）', date:'2026/09/21–09/27', price:19000, qty:5, key:'progress', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/18 09:30', payTime:'2026/09/18 09:31', material:{ name:'拾光_15s_1080p.mp4', size:'88MB', duration:'15 秒', resolution:'1920×1080' } },
-  { id:'YK20260922019', customer:'星汉文化传媒有限公司', name:'金逸影城（广州天河店）', date:'2026/10/01–10/07', price:26000, qty:5, key:'progress', payMode:'原价权益支付', method:'对公转账', orderTime:'2026/09/22 11:15', payTime:'2026/09/22 11:20', material:{ name:'星汉_国庆_15s.mp4', size:'120MB', duration:'15 秒', resolution:'1920×1080' } },
-  { id:'YK20260905011', customer:'苏州拾光文化传播有限公司', name:'中影国际影城（长沙芙蓉店）', date:'2026/09/07–09/13', price:18000, qty:6, key:'done', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/05 10:00', payTime:'2026/09/05 10:01', material:{ name:'拾光_9月_15s.mp4', size:'80MB', duration:'15 秒', resolution:'1920×1080' } },
-  { id:'YK20260828003', customer:'长沙云图设计有限公司', name:'CGV影城（长沙开福店）', date:'2026/08/31–09/06', price:15400, qty:4, key:'cancel', cancelReason:'支付超时未完成，订单已自动取消', payMode:'折扣支付', orderTime:'2026/08/28 20:15' },
+  { id:'YK20260920008', customer:'星汉文化传媒有限公司', name:'CGV影城（长沙岳麓店）', date:'2026/09/27–10/03', price:25200, qty:7, key:'pay', payMode:'原价权益支付', method:'对公转账（待确认）', orderTime:'2026/09/20 14:22', userType:'company', userPhone:'18800001111', payCountdown:1800 },
+  { id:'YK20260923025', customer:'湖南青柠互动科技有限公司', name:'中影国际影城（长沙雨花店）', date:'2026/10/02–10/08', price:21000, qty:6, key:'pay', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/23 09:48', userType:'company', userPhone:'18800002222', payCountdown:480 },
+  { id:'YK20260921016', customer:'林间品牌咨询有限公司', name:'万达影城（长沙开福店）', date:'2026/09/24–09/30', price:15400, qty:4, key:'placing', sub:'review', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/21 09:05', payTime:'2026/09/21 09:06', material:{ name:'林间_15s_1080p.mp4', size:'96MB', duration:'15 秒', resolution:'1920×1080' }, userType:'company', userPhone:'18800003333' },
+  { id:'YK20260913015', customer:'湖南鼎信广告有限公司', name:'万达影城（长沙梅溪湖店）', date:'2026/09/30–10/06', price:22400, qty:5, key:'placing', sub:'upload', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/13 16:40', payTime:'2026/09/13 16:41', userType:'company', userPhone:'18800004444' },
+  { id:'YK20260915022', customer:'长沙云图设计有限公司', name:'博纳国际影城（长沙天心店）', date:'2026/09/18–09/24', price:16800, qty:7, key:'placing', sub:'reject', rejectReason:'素材分辨率不足 1080P，请重新导出后上传', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/15 09:05', payTime:'2026/09/15 09:06', material:{ name:'云图_15s.mp4', size:'52MB', duration:'15 秒', resolution:'1280×720' }, userType:'company', userPhone:'18800005555' },
+  { id:'YK20260918012', customer:'苏州拾光文化传播有限公司', name:'潇湘国际影城（长沙岳麓店）', date:'2026/09/21–09/27', price:19000, qty:5, key:'progress', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/18 09:30', payTime:'2026/09/18 09:31', material:{ name:'拾光_15s_1080p.mp4', size:'88MB', duration:'15 秒', resolution:'1920×1080' }, sample:{ name:'拾光_15s_样片.mp4' }, monitor:{ name:'监播证.png', time:'2026/09/24 10:20' }, report:{ name:'拾光_9月_上刊报告.pdf' }, video:{ name:'拾光_9月_实拍视频.mp4' }, userType:'company', userPhone:'18800006666' },
+  { id:'YK20260922019', customer:'星汉文化传媒有限公司', name:'金逸影城（广州天河店）', date:'2026/10/01–10/07', price:26000, qty:5, key:'progress', payMode:'原价权益支付', method:'对公转账', orderTime:'2026/09/22 11:15', payTime:'2026/09/22 11:20', material:{ name:'星汉_国庆_15s.mp4', size:'120MB', duration:'15 秒', resolution:'1920×1080' }, sample:{ name:'星汉_国庆_15s_样片.mp4' }, monitor:{ name:'监播证.png', time:'2026/09/28 15:40' }, report:{ name:'星汉_国庆_上刊报告.pdf' }, video:{ name:'星汉_国庆_实拍视频.mp4' }, exception:'投放画面出现花屏卡顿，观众反馈观影体验受影响，请协助排查并处理。', userType:'company', userPhone:'18800007777' },
+  { id:'YK20260905011', customer:'苏州拾光文化传播有限公司', name:'中影国际影城（长沙芙蓉店）', date:'2026/09/07–09/13', price:18000, qty:6, key:'done', payMode:'折扣支付', method:'微信支付', orderTime:'2026/09/05 10:00', payTime:'2026/09/05 10:01', material:{ name:'拾光_9月_15s.mp4', size:'80MB', duration:'15 秒', resolution:'1920×1080' }, sample:{ name:'拾光_9月_15s_样片.mp4' }, monitor:{ name:'监播证.png', time:'2026/09/11 09:20' }, report:{ name:'拾光_9月_上刊报告.pdf' }, video:{ name:'拾光_9月_实拍视频.mp4' }, userType:'company', userPhone:'18800008888' },
+  { id:'YK20260828003', customer:'刘一鸣', name:'CGV影城（长沙开福店）', date:'2026/08/31–09/06', price:15400, qty:4, key:'cancel', cancelReason:'支付超时未完成，订单已自动取消', payMode:'折扣支付', orderTime:'2026/08/28 20:15', userType:'person', userPhone:'13912345678' },
 ];
 let orders = JSON.parse(JSON.stringify(ORDER_SEED));
-let orderFilter = { q:'', status:'all' };
+let orderFilter = { q:'', status:'all', method:'all' };
 
 function setOrderQ(v){ orderFilter.q = v.trim(); renderPage('orders'); }
 function setOrderStatus(v){ orderFilter.status = v; renderPage('orders'); }
+function setOrderMethod(v){ orderFilter.method = v; renderPage('orders'); }
+function orderMethodType(m){
+  if(!m) return '';
+  if(m.indexOf('微信')>=0) return 'wechat';
+  if(m.indexOf('对公')>=0) return 'corp';
+  return '';
+}
 
 function orderStatusCell(o){
   const st = ORDER_STATUS[o.key] || { label:o.key, cls:'gray' };
@@ -2088,12 +2126,20 @@ function orderStatusCell(o){
     const sub = PLACING_SUB[o.sub];
     html += '<div style="font-size:11px;color:var(--faint);margin-top:3px">'+sub.label+'</div>';
   }
+  if(o.exception && o.key==='progress'){
+    html += '<div style="margin-top:3px"><span class="pill red">异常</span></div>';
+  }
   return html;
 }
 
 function orderList(){
   return orders.filter(o=>{
-    if(orderFilter.status!=='all' && o.key!==orderFilter.status) return false;
+    if(orderFilter.status==='exception'){
+      if(!(o.exception && o.key==='progress')) return false;
+    } else if(orderFilter.status!=='all' && o.key!==orderFilter.status){
+      return false;
+    }
+    if(orderFilter.method!=='all' && orderMethodType(o.method)!==orderFilter.method) return false;
     if(orderFilter.q){
       const hay = (o.id+' '+o.customer+' '+o.name).toLowerCase();
       if(!hay.includes(orderFilter.q.toLowerCase())) return false;
@@ -2108,20 +2154,31 @@ function orderStatusChips(){
     { k:'pay', label:'待支付' },
     { k:'placing', label:'待投放' },
     { k:'progress', label:'投放中' },
+    { k:'exception', label:'异常' },
     { k:'done', label:'已完成' },
     { k:'cancel', label:'已取消' },
   ];
   return opts.map(x=>'<button type="button" class="chip'+(orderFilter.status===x.k?' active':'')+'" onclick="setOrderStatus(\''+x.k+'\')">'+x.label+'</button>').join('');
 }
 
+function orderMethodChips(){
+  const opts = [
+    { k:'all', label:'全部支付方式' },
+    { k:'wechat', label:'微信支付' },
+    { k:'corp', label:'对公转账' },
+  ];
+  return opts.map(x=>'<button type="button" class="chip'+(orderFilter.method===x.k?' active':'')+'" onclick="setOrderMethod(\''+x.k+'\')">'+x.label+'</button>').join('');
+}
+
 function orderRow(o){
   return '<tr>'+
-    '<td class="mono" style="white-space:nowrap">'+esc(o.id)+'</td>'+
+    '<td class="mono" style="white-space:nowrap"><a href="javascript:void(0)" style="color:var(--cyan);text-decoration:none;border-bottom:1px dashed rgba(61,215,196,.55);cursor:pointer" onclick="openOrder(\''+o.id+'\')">'+esc(o.id)+'</a></td>'+
     '<td><b style="font-size:13px">'+esc(o.customer)+'</b><span class="sub" style="display:block;font-size:11.5px;color:var(--faint);margin-top:2px">'+esc(o.name)+'</span></td>'+
     '<td class="muted" style="white-space:nowrap">'+esc(o.date)+'</td>'+
     '<td class="muted">'+o.qty+' 条</td>'+
     '<td class="mono" style="white-space:nowrap"><span style="color:var(--cyan)">¥'+o.price.toLocaleString()+'</span></td>'+
     '<td class="muted">'+esc(o.payMode)+'</td>'+
+    '<td class="muted">'+esc(o.method||'—')+'</td>'+
     '<td>'+orderStatusCell(o)+'</td>'+
     '<td class="muted" style="white-space:nowrap">'+esc(o.orderTime)+'</td>'+
     '<td><div class="row-actions"><button class="act-btn" title="查看详情" onclick="openOrder(\''+o.id+'\')">'+EYE_ICO+'</button></div></td>'+
@@ -2150,26 +2207,140 @@ function orderStepsHTML(o){
     return '<div class="od-step '+cls+'"><div class="s-dot">'+(i<cur?'✓':(i+1))+'</div><span>'+s+'</span></div>';
   }).join('')+'</div>';
 }
+function orderUserLevel(o){
+  const c = customers.find(x =>
+    o.userType==='person'
+      ? (x.personal && x.personal.name===o.customer)
+      : (x.enterprise && x.enterprise.name===o.customer)
+  );
+  if(!c) return '<span class="disc-tag off">普通用户</span>';
+  const d = o.userType==='person' ? c.personal : c.enterprise;
+  if(d && d.discountOn) return '<span class="disc-tag on">折扣用户 <span class="dv">'+d.discountRate+' 折</span></span>';
+  return '<span class="disc-tag off">普通用户</span>';
+}
+let _orderCdTimer = null;
+function startOrderCountdown(sec){
+  if(_orderCdTimer){ clearInterval(_orderCdTimer); _orderCdTimer = null; }
+  let left = Math.max(0, Math.floor(sec));
+  const pad = n => String(n).padStart(2,'0');
+  const render = function(){
+    const el = document.getElementById('pay-cd');
+    if(!el){ if(_orderCdTimer){ clearInterval(_orderCdTimer); _orderCdTimer = null; } return; }
+    if(left <= 0){
+      el.textContent = '已超时';
+      el.style.color = 'var(--red)';
+      if(_orderCdTimer){ clearInterval(_orderCdTimer); _orderCdTimer = null; }
+      return;
+    }
+    const h = Math.floor(left/3600), m = Math.floor((left%3600)/60), s = left%60;
+    el.textContent = (h>0 ? pad(h)+':' : '') + pad(m) + ':' + pad(s);
+    left--;
+  };
+  render();
+  _orderCdTimer = setInterval(render, 1000);
+}
+/* 媒体预览弹层（视频 / 图片） */
+let _mediaModal = null;
+function ensureMediaModal(){
+  if(_mediaModal) return _mediaModal;
+  _mediaModal = document.createElement('div');
+  _mediaModal.className = 'media-modal';
+  _mediaModal.innerHTML = ''+
+    '<div class="media-dialog">'+
+      '<div class="media-head"><h3 id="media-title">预览</h3><button class="close" onclick="closeMediaModal()">×</button></div>'+
+      '<div class="media-body" id="media-body"></div>'+
+    '</div>';
+  document.body.appendChild(_mediaModal);
+  _mediaModal.addEventListener('click', function(e){ if(e.target===_mediaModal) closeMediaModal(); });
+  return _mediaModal;
+}
+function closeMediaModal(){
+  if(!_mediaModal) return;
+  const body = document.getElementById('media-body');
+  if(body){ const v = body.querySelector('video'); if(v) v.pause(); body.innerHTML = ''; }
+  _mediaModal.classList.remove('open');
+}
+function openVideoPreview(title, src){
+  ensureMediaModal();
+  document.getElementById('media-title').textContent = title || '视频预览';
+  document.getElementById('media-body').innerHTML = '<video controls autoplay src="'+src+'"></video>';
+  _mediaModal.classList.add('open');
+}
+function openImagePreview(title, src){
+  ensureMediaModal();
+  document.getElementById('media-title').textContent = title || '图片预览';
+  document.getElementById('media-body').innerHTML = '<img src="'+src+'" alt="'+esc(title||'图片预览')+'">';
+  _mediaModal.classList.add('open');
+}
 function orderDetailBody(o){
   const paid = o.key!=='pay' && o.key!=='cancel';
+  const isDelivered = o.key==='progress' || o.key==='done';
   const subLabel = (o.key==='placing' && o.sub) ? PLACING_SUB[o.sub].label : (o.key==='progress'?'已通过审核':'—');
+  let countdownSec = '';
+  if(o.key==='pay'){
+    countdownSec = '<div class="od-countdown"><div class="cd-ico">⏱</div><div class="cd-copy"><b>等待支付</b><span>请在倒计时结束前完成支付，超时订单将自动取消</span></div><div class="cd-time" id="pay-cd">--:--</div></div>';
+  }
   let materialSec = '';
   if(o.material){
-    materialSec = '<div class="od-section"><label>广告素材</label><div class="od-grid">'+
-      '<div class="od-item full"><label>素材文件</label><span>'+esc(o.material.name)+'</span></div>'+
-      '<div class="od-item"><label>规格</label><span>'+esc(o.material.resolution)+' · '+esc(o.material.duration)+'</span></div>'+
-      '<div class="od-item"><label>大小</label><span>'+esc(o.material.size)+'</span></div>'+
+    const preview = (o.key==='placing' && o.sub==='review') || isDelivered;
+    const fileHtml = preview
+      ? '<a class="file-link" href="javascript:void(0)" onclick="openVideoPreview(\''+esc(o.material.name)+'\', DEMO_VIDEO)"><span class="f-ico">▶</span><span>'+esc(o.material.name)+'</span></a>'
+      : '<span>'+esc(o.material.name)+'</span>';
+    let rows = '<div class="od-item full"><label>素材文件</label>'+fileHtml+'</div>';
+    if(!(o.key==='placing' && o.sub==='review')){
+      rows += '<div class="od-item"><label>规格</label><span>'+esc(o.material.resolution)+' · '+esc(o.material.duration)+'</span></div>'+
+              '<div class="od-item"><label>大小</label><span>'+esc(o.material.size)+'</span></div>';
+    }
+    materialSec = '<div class="od-section"><label>广告素材</label><div class="od-grid">'+rows+'</div></div>';
+  }
+  let sampleSec = '';
+  if(isDelivered && o.sample){
+    sampleSec = '<div class="od-section"><label>样片</label><div class="od-grid">'+
+      '<div class="od-item full"><label>样片文件</label><a class="file-link" href="javascript:void(0)" onclick="openVideoPreview(\''+esc(o.sample.name)+'\', DEMO_VIDEO)"><span class="f-ico">▶</span><span>'+esc(o.sample.name)+'</span></a></div>'+
     '</div></div>';
+  }
+  let monitorSec = '';
+  if(isDelivered && o.monitor){
+    monitorSec = '<div class="od-section"><label>监播证</label><div class="od-grid">'+
+      '<div class="od-item full"><div class="receipt-show" style="cursor:zoom-in"><img src="'+MONITOR_IMG+'" alt="监播证" onclick="openImagePreview(\'监播证\', MONITOR_IMG)"></div></div>'+
+      '<div class="od-item"><label>文件</label><span>'+esc(o.monitor.name)+'</span></div>'+
+      '<div class="od-item"><label>上传时间</label><span>'+esc(o.monitor.time)+'</span></div>'+
+    '</div></div>';
+  }
+  let deliverSec = '';
+  if(isDelivered && (o.report || o.video)){
+    let r = '';
+    if(o.report) r += '<div class="od-item full"><label>上刊报告</label><span class="file-link"><span class="f-ico">📄</span><span>'+esc(o.report.name)+'</span></span></div>';
+    if(o.video) r += '<div class="od-item full"><label>实拍视频</label><a class="file-link" href="javascript:void(0)" onclick="openVideoPreview(\''+esc(o.video.name)+'\', DEMO_VIDEO)"><span class="f-ico">▶</span><span>'+esc(o.video.name)+'</span></a></div>';
+    deliverSec = '<div class="od-section"><label>上刊报告 / 实拍视频</label><div class="od-grid">'+r+'</div></div>';
+  }
+  let exceptionSec = '';
+  if(o.exception){
+    exceptionSec = '<div class="od-section"><label>异常反馈</label><div class="od-change" style="background:var(--red-soft);border-color:rgba(238,111,101,.4)"><b style="color:var(--red)">⚠ 投放异常</b><p>'+esc(o.exception)+'</p></div></div>';
   }
   let rejectSec = '';
   if(o.key==='placing' && o.sub==='reject' && o.rejectReason){
     rejectSec = '<div class="od-section"><label>驳回原因</label><div class="od-change" style="background:var(--red-soft);border-color:rgba(238,111,101,.4)"><b style="color:var(--red)">素材已驳回</b><p>'+esc(o.rejectReason)+'</p></div></div>';
   }
-  return orderStatusHead(o)+orderStepsHTML(o)+
+  let receiptSec = '';
+  if(o.receipt){
+    receiptSec = '<div class="od-section"><label>转账凭证</label><div class="od-grid">'+
+      '<div class="od-item full"><div class="receipt-show"><img src="'+o.receipt.dataUrl+'" alt="转账凭证"></div></div>'+
+      '<div class="od-item"><label>凭证文件</label><span>'+esc(o.receipt.name)+'</span></div>'+
+      '<div class="od-item"><label>确认时间</label><span>'+esc(o.receipt.time)+'</span></div>'+
+    '</div></div>';
+  }
+  return orderStatusHead(o)+countdownSec+orderStepsHTML(o)+
     '<div class="od-section"><label>订单信息</label><div class="od-grid">'+
       '<div class="od-item full"><label>订单编号</label><span class="mono">'+esc(o.id)+'</span></div>'+
       '<div class="od-item"><label>客户</label><span>'+esc(o.customer)+'</span></div>'+
       '<div class="od-item"><label>下单时间</label><span>'+esc(o.orderTime)+'</span></div>'+
+    '</div></div>'+
+    '<div class="od-section"><label>用户信息</label><div class="od-grid">'+
+      '<div class="od-item full"><label>用户昵称 / 企业名</label><span>'+esc(o.customer)+'</span></div>'+
+      '<div class="od-item"><label>手机号</label><span>'+esc(o.userPhone||'—')+'</span></div>'+
+      '<div class="od-item"><label>下单身份</label><span>'+(o.userType==='person'?'个人':'企业')+'</span></div>'+
+      '<div class="od-item"><label>用户等级</label>'+orderUserLevel(o)+'</div>'+
     '</div></div>'+
     '<div class="od-section"><label>投放信息</label><div class="od-grid">'+
       '<div class="od-item full"><label>影院</label><span>'+esc(o.name)+'</span></div>'+
@@ -2184,11 +2355,11 @@ function orderDetailBody(o){
       '<div class="od-item"><label>支付时间</label><span>'+(o.payTime?esc(o.payTime):'—')+'</span></div>'+
       '<div class="od-item"><label>素材状态</label><span>'+subLabel+'</span></div>'+
     '</div></div>'+
-    materialSec+rejectSec;
+    receiptSec+materialSec+sampleSec+monitorSec+deliverSec+exceptionSec+rejectSec;
 }
 function orderDetailFoot(o){
   const btns = [];
-  if(o.key==='pay'){
+  if(o.key==='pay' && orderMethodType(o.method)==='corp'){
     btns.push('<button class="btn btn-primary" onclick="orderConfirmPaid(\''+o.id+'\')">确认到账</button>');
   } else if(o.key==='placing' && o.sub==='review'){
     btns.push('<button class="btn btn-ghost" onclick="orderRejectMaterial(\''+o.id+'\')">驳回</button>');
@@ -2202,16 +2373,68 @@ function orderDetailFoot(o){
 function openOrder(id){
   const o = orders.find(x=>x.id===id); if(!o) return;
   openDrawer('订单详情 · '+o.id, orderDetailBody(o), orderDetailFoot(o));
+  if(o.key==='pay'){ startOrderCountdown(o.payCountdown || 1800); }
+  else if(_orderCdTimer){ clearInterval(_orderCdTimer); _orderCdTimer = null; }
 }
 
 /* 状态流转操作 */
+let _receiptOrderId = null;
+let _receiptData = null;
+
 function orderConfirmPaid(id){
   const o = orders.find(x=>x.id===id); if(!o) return;
+  _receiptOrderId = id;
+  _receiptData = null;
+  openDrawer('确认到账 · 上传转账凭证', receiptUploadBody(o), receiptUploadFoot());
+}
+function receiptUploadBody(o){
+  return ''+
+  '<div class="od-status ic-pay" style="margin-bottom:16px"><div class="od-status-ico">▣</div><div class="od-status-copy"><b>对公转账确认</b><span>请上传该笔订单的银行转账凭证截图，确认后订单将进入「待投放」。</span></div></div>'+
+  '<div class="field"><label>订单信息</label><div class="od-grid">'+
+    '<div class="od-item full"><label>订单编号</label><span class="mono">'+esc(o.id)+'</span></div>'+
+    '<div class="od-item"><label>客户</label><span>'+esc(o.customer)+'</span></div>'+
+    '<div class="od-item"><label>订单金额</label><span style="color:var(--cyan)">¥'+o.price.toLocaleString()+'</span></div>'+
+  '</div></div>'+
+  '<div class="field"><label>转账凭证 <b>*</b></label>'+
+    '<div class="receipt-upload" onclick="document.getElementById(\'receipt-file\').click()">'+
+      '<input type="file" id="receipt-file" accept="image/*" style="display:none" onchange="onReceiptFile(this)">'+
+      '<div class="receipt-empty" id="receipt-empty">'+
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'+
+        '<b>点击上传转账凭证</b>'+
+        '<span>支持 JPG / PNG 图片，请上传清晰的银行转账截图</span>'+
+      '</div>'+
+      '<div class="receipt-preview" id="receipt-preview" style="display:none"></div>'+
+    '</div>'+
+  '</div>';
+}
+function receiptUploadFoot(){
+  return '<button class="btn btn-ghost" onclick="closeDrawer()">取消</button>'+
+    '<button class="btn btn-primary" onclick="confirmReceiptPaid()">确认到账</button>';
+}
+function onReceiptFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    _receiptData = { name: file.name, dataUrl: e.target.result };
+    const empty = document.getElementById('receipt-empty');
+    const prev = document.getElementById('receipt-preview');
+    if(empty) empty.style.display = 'none';
+    if(prev){ prev.style.display = 'block'; prev.innerHTML = '<img src="'+e.target.result+'" alt="转账凭证">'; }
+  };
+  reader.readAsDataURL(file);
+}
+function confirmReceiptPaid(){
+  if(!_receiptData){ toast2('请先上传转账凭证'); return; }
+  const o = orders.find(x=>x.id===_receiptOrderId); if(!o) return;
   const now = new Date(), pad = n=>String(n).padStart(2,'0');
-  o.payTime = now.getFullYear()+'/'+pad(now.getMonth()+1)+'/'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  const payTime = now.getFullYear()+'/'+pad(now.getMonth()+1)+'/'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  o.payTime = payTime;
   o.method = '对公转账';
+  o.receipt = { name: _receiptData.name, dataUrl: _receiptData.dataUrl, time: payTime };
   o.key = 'placing'; o.sub = 'upload';
   toast2('已确认到账，订单进入待投放');
+  _receiptOrderId = null; _receiptData = null;
   closeDrawer(); renderPage('orders');
 }
 function orderApproveMaterial(id){
@@ -2243,7 +2466,7 @@ PAGE.orders = function(){
   const amount = orders.filter(o=>o.key!=='cancel').reduce((s,o)=>s+o.price,0);
   const list = orderList();
   const rows = list.map(orderRow).join('');
-  const empty = list.length ? '' : '<tr><td colspan="9" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的订单</td></tr>';
+  const empty = list.length ? '' : '<tr><td colspan="10" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的订单</td></tr>';
   return ''+
   '<div class="page-head reveal">'+
     '<div class="page-title"><span class="eyebrow">订单与交付</span>订单管理</div>'+
@@ -2260,12 +2483,13 @@ PAGE.orders = function(){
   '<div class="toolbar reveal" style="animation-delay:.08s">'+
     '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="order-q" placeholder="搜索订单号 / 客户 / 影院…" value="'+esc(orderFilter.q)+'" oninput="setOrderQ(this.value)"></div>'+
     '<div class="chips">'+orderStatusChips()+'</div>'+
+    '<div class="chips">'+orderMethodChips()+'</div>'+
   '</div>'+
 
   '<div class="panel reveal" style="animation-delay:.12s">'+
     '<div class="panel-head"><h3>订单列表</h3><span class="count">共 '+list.length+' 单</span></div>'+
     '<div class="table-wrap"><table>'+
-      '<thead><tr><th>订单编号</th><th>客户 / 影院</th><th>投放日期</th><th>广告位</th><th>金额</th><th>支付模式</th><th>状态</th><th>下单时间</th><th>操作</th></tr></thead>'+
+      '<thead><tr><th>订单编号</th><th>客户 / 影院</th><th>投放日期</th><th>广告位</th><th>金额</th><th>支付模式</th><th>支付方式</th><th>状态</th><th>下单时间</th><th>操作</th></tr></thead>'+
       '<tbody>'+rows+empty+'</tbody>'+
     '</table></div>'+
   '</div>';
@@ -2588,7 +2812,7 @@ renderPage('package');
 <script>
 /* =====================================================
    模块：上刊管理
-   素材审核、素材规范配置、样片确认、交付与回传
+   素材审核、样片上传、监播证上传、交付与回传
    字段对齐小程序原型（cinema-ad-miniapp.html 上刊流程）
 ===================================================== */
 const PUB_SPEC = {
@@ -2596,30 +2820,36 @@ const PUB_SPEC = {
   bitrate:'≥ 8 Mbps', fps:'25 fps', ratio:'16:9', codec:'H.264 / H.265',
 };
 
+const MONITOR_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="360" height="220"><rect width="360" height="220" fill="#0d1531"/><rect x="14" y="14" width="332" height="192" fill="none" stroke="#3dd7c4" stroke-width="2.5" rx="6"/><text x="180" y="72" fill="#eef3fb" font-size="26" font-family="sans-serif" font-weight="bold" text-anchor="middle">监播证</text><text x="180" y="112" fill="#8b98b8" font-size="14" font-family="sans-serif" text-anchor="middle">监播证明 · 示意文件</text><text x="180" y="150" fill="#f0b45c" font-size="12" font-family="sans-serif" text-anchor="middle">已通过审核</text></svg>';
+const MONITOR_IMG = 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(MONITOR_SVG);
+
 const PUB_SEED = [
   { id:'SK20260921001', orderId:'YK20260921016', customer:'林间品牌咨询有限公司', cinema:'万达影城（长沙开福店）', date:'2026/09/24–09/30',
-    material:{ name:'林间_15s_1080p.mp4', size:'96MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'review', rejectReason:'', sampleStatus:'none', report:false, video:false, delivered:false },
+    material:{ name:'林间_15s_1080p.mp4', size:'96MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'review', rejectReason:'', sampleStatus:'none', monitor:null, report:false, video:false, delivered:false },
   { id:'SK20260922002', orderId:'YK20260922019', customer:'星汉文化传媒有限公司', cinema:'金逸影城（广州天河店）', date:'2026/10/01–10/07',
-    material:{ name:'星汉_国庆_15s.mp4', size:'120MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'review', rejectReason:'', sampleStatus:'none', report:false, video:false, delivered:false },
+    material:{ name:'星汉_国庆_15s.mp4', size:'120MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'review', rejectReason:'', sampleStatus:'none', monitor:null, report:false, video:false, delivered:false },
   { id:'SK20260918003', orderId:'YK20260918012', customer:'苏州拾光文化传播有限公司', cinema:'潇湘国际影城（长沙岳麓店）', date:'2026/09/21–09/27',
-    material:{ name:'拾光_15s_1080p.mp4', size:'88MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'approved', rejectReason:'', sampleStatus:'generated', report:false, video:false, delivered:false },
+    material:{ name:'拾光_15s_1080p.mp4', size:'88MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'approved', rejectReason:'', sampleStatus:'none', monitor:null, report:false, video:false, delivered:false },
   { id:'SK20260915004', orderId:'YK20260915022', customer:'长沙云图设计有限公司', cinema:'博纳国际影城（长沙天心店）', date:'2026/09/18–09/24',
-    material:{ name:'云图_15s.mp4', size:'52MB', duration:'15 秒', resolution:'1280×720' }, mStatus:'rejected', rejectReason:'素材分辨率不足 1080P，请重新导出后上传', sampleStatus:'none', report:false, video:false, delivered:false },
+    material:{ name:'云图_15s.mp4', size:'52MB', duration:'15 秒', resolution:'1280×720' }, mStatus:'rejected', rejectReason:'素材分辨率不足 1080P，请重新导出后上传', sampleStatus:'none', monitor:null, report:false, video:false, delivered:false },
   { id:'SK20260913005', orderId:'YK20260905011', customer:'苏州拾光文化传播有限公司', cinema:'中影国际影城（长沙芙蓉店）', date:'2026/09/07–09/13',
-    material:{ name:'拾光_9月_15s.mp4', size:'80MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'approved', rejectReason:'', sampleStatus:'confirmed', report:true, video:false, delivered:false },
+    material:{ name:'拾光_9月_15s.mp4', size:'80MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'approved', rejectReason:'', sampleStatus:'uploaded', sample:{ name:'拾光_9月_15s_样片.mp4' }, monitor:null, report:false, video:false, delivered:false },
   { id:'SK20260901006', orderId:'YK20260821002', customer:'林间品牌咨询有限公司', cinema:'金逸影城（广州天河店）', date:'2026/08/24–08/30',
-    material:{ name:'林间_8月_15s.mp4', size:'72MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'approved', rejectReason:'', sampleStatus:'confirmed', report:true, video:true, delivered:true },
+    material:{ name:'林间_8月_15s.mp4', size:'72MB', duration:'15 秒', resolution:'1920×1080' }, mStatus:'approved', rejectReason:'', sampleStatus:'uploaded', sample:{ name:'林间_8月_15s_样片.mp4' }, monitor:{ name:'监播证.png', dataUrl:MONITOR_IMG, time:'2026/08/26 14:30' }, report:true, video:true, delivered:true },
 ];
 let pubs = JSON.parse(JSON.stringify(PUB_SEED));
 let pubTab = 'audit';
+let pubSearch = '';
 
 function setPubTab(t){ pubTab = t; renderPage('publish'); }
+function setPubSearch(v){ pubSearch = v.trim(); renderPage('publish'); }
 
 function pubCounts(){
   return {
     audit: pubs.filter(p=>p.mStatus==='review').length,
-    sample: pubs.filter(p=>p.mStatus==='approved' && p.sampleStatus!=='confirmed').length,
-    deliver: pubs.filter(p=>p.sampleStatus==='confirmed' && !p.delivered).length,
+    sample: pubs.filter(p=>p.mStatus==='approved' && p.sampleStatus!=='uploaded').length,
+    monitor: pubs.filter(p=>p.sampleStatus==='uploaded' && !p.monitor).length,
+    deliver: pubs.filter(p=>p.sampleStatus==='uploaded' && p.monitor && !p.delivered).length,
   };
 }
 
@@ -2627,7 +2857,7 @@ function pubCounts(){
 function auditRow(p){
   const st = p.mStatus==='review' ? '<span class="pill amber">待审核</span>' : p.mStatus==='approved' ? '<span class="pill green">已通过</span>' : '<span class="pill red">已驳回</span>';
   return '<tr>'+
-    '<td class="mono" style="white-space:nowrap">'+esc(p.id)+'</td>'+
+    '<td class="mono" style="white-space:nowrap">'+esc(p.orderId)+'</td>'+
     '<td><b style="font-size:13px">'+esc(p.customer)+'</b><span class="sub" style="display:block;font-size:11.5px;color:var(--faint);margin-top:2px">'+esc(p.cinema)+'</span></td>'+
     '<td class="muted">'+esc(p.material.name)+'<span class="sub" style="display:block;font-size:11px;color:var(--faint);margin-top:2px">'+esc(p.material.duration)+' · '+esc(p.material.resolution)+' · '+esc(p.material.size)+'</span></td>'+
     '<td class="muted" style="white-space:nowrap">'+esc(p.date)+'</td>'+
@@ -2636,16 +2866,29 @@ function auditRow(p){
   '</tr>';
 }
 
-/* 样片确认列表 */
+/* 样片上传列表 */
 function sampleRow(p){
-  const st = p.sampleStatus==='confirmed' ? '<span class="pill green">已确认</span>' : '<span class="pill amber">待确认</span>';
+  const st = p.sampleStatus==='uploaded' ? '<span class="pill green">已上传</span>' : '<span class="pill amber">待上传</span>';
   return '<tr>'+
-    '<td class="mono" style="white-space:nowrap">'+esc(p.id)+'</td>'+
+    '<td class="mono" style="white-space:nowrap">'+esc(p.orderId)+'</td>'+
     '<td><b style="font-size:13px">'+esc(p.customer)+'</b><span class="sub" style="display:block;font-size:11.5px;color:var(--faint);margin-top:2px">'+esc(p.cinema)+'</span></td>'+
     '<td class="muted">'+esc(p.material.name)+'</td>'+
     '<td class="muted" style="white-space:nowrap">'+esc(p.date)+'</td>'+
     '<td>'+st+'</td>'+
     '<td><div class="row-actions"><button class="act-btn" title="查看详情" onclick="openSample(\''+p.id+'\')">'+EYE_ICO+'</button></div></td>'+
+  '</tr>';
+}
+
+/* 监播证上传列表 */
+function monitorRow(p){
+  const st = p.monitor ? '<span class="pill green">已上传</span>' : '<span class="pill amber">待上传</span>';
+  return '<tr>'+
+    '<td class="mono" style="white-space:nowrap">'+esc(p.orderId)+'</td>'+
+    '<td><b style="font-size:13px">'+esc(p.customer)+'</b><span class="sub" style="display:block;font-size:11.5px;color:var(--faint);margin-top:2px">'+esc(p.cinema)+'</span></td>'+
+    '<td class="muted">'+esc(p.material.name)+'</td>'+
+    '<td class="muted" style="white-space:nowrap">'+esc(p.date)+'</td>'+
+    '<td>'+st+'</td>'+
+    '<td><div class="row-actions"><button class="act-btn" title="查看详情" onclick="openMonitor(\''+p.id+'\')">'+EYE_ICO+'</button></div></td>'+
   '</tr>';
 }
 
@@ -2655,7 +2898,7 @@ function deliverRow(p){
   const report = p.report ? '<span class="mini-tag" style="color:var(--green);border-color:rgba(52,201,142,.4)">报告 ✓</span>' : '<span class="mini-tag">报告 —</span>';
   const video = p.video ? '<span class="mini-tag" style="color:var(--green);border-color:rgba(52,201,142,.4)">视频 ✓</span>' : '<span class="mini-tag">视频 —</span>';
   return '<tr>'+
-    '<td class="mono" style="white-space:nowrap">'+esc(p.id)+'</td>'+
+    '<td class="mono" style="white-space:nowrap">'+esc(p.orderId)+'</td>'+
     '<td><b style="font-size:13px">'+esc(p.customer)+'</b><span class="sub" style="display:block;font-size:11.5px;color:var(--faint);margin-top:2px">'+esc(p.cinema)+'</span></td>'+
     '<td class="muted" style="white-space:nowrap">'+esc(p.date)+'</td>'+
     '<td><div style="display:flex;gap:6px">'+report+video+'</div></td>'+
@@ -2673,8 +2916,7 @@ function auditBody(p){
   }
   return '<div class="od-status '+(p.mStatus==='review'?'ic-pending':p.mStatus==='approved'?'ic-confirmed':'ic-closed')+'"><div class="od-status-ico">'+(p.mStatus==='review'?'⏳':p.mStatus==='approved'?'✓':'✕')+'</div><div class="od-status-copy"><b>'+st.replace(/<[^>]+>/g,'')+'</b><span>'+(p.mStatus==='review'?'素材已提交，等待人工审核':p.mStatus==='approved'?'素材已审核通过':'素材未通过审核')+'</span></div></div>'+
     '<div class="od-section"><label>任务信息</label><div class="od-grid">'+
-      '<div class="od-item full"><label>上刊任务号</label><span class="mono">'+esc(p.id)+'</span></div>'+
-      '<div class="od-item"><label>关联订单</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
+      '<div class="od-item full"><label>订单编号</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
       '<div class="od-item"><label>投放日期</label><span>'+esc(p.date)+'</span></div>'+
       '<div class="od-item full"><label>客户 / 影院</label><span>'+esc(p.customer)+' · '+esc(p.cinema)+'</span></div>'+
     '</div></div>'+
@@ -2700,40 +2942,129 @@ function auditFoot(p){
   btns.unshift('<button class="btn btn-ghost" onclick="closeDrawer()">关闭</button>');
   return btns.join('');
 }
-function openAudit(id){ const p=pubs.find(x=>x.id===id); if(!p) return; openDrawer('素材审核 · '+p.id, auditBody(p), auditFoot(p)); }
+function openAudit(id){ const p=pubs.find(x=>x.id===id); if(!p) return; openDrawer('素材审核 · '+p.orderId, auditBody(p), auditFoot(p)); }
 
+let _sampleData = null;
 function sampleBody(p){
-  const st = p.sampleStatus==='confirmed' ? '<span class="pill green">已确认</span>' : '<span class="pill amber">待确认</span>';
-  return '<div class="od-status '+(p.sampleStatus==='confirmed'?'ic-confirmed':'ic-following')+'"><div class="od-status-ico">'+(p.sampleStatus==='confirmed'?'✓':'▶')+'</div><div class="od-status-copy"><b>'+(p.sampleStatus==='confirmed'?'样片已确认':'样片待确认')+'</b><span>'+(p.sampleStatus==='confirmed'?'客户已确认样片，可进入上刊':'样片已生成，等待客户确认')+'</span></div></div>'+
+  const uploaded = p.sampleStatus==='uploaded';
+  const head = uploaded
+    ? '<div class="od-status ic-confirmed"><div class="od-status-ico">✓</div><div class="od-status-copy"><b>样片已上传</b><span>样片已上传，订单已进入「投放中」</span></div></div>'
+    : '<div class="od-status ic-following"><div class="od-status-ico">▶</div><div class="od-status-copy"><b>待上传样片</b><span>素材已审核通过，请上传样片</span></div></div>';
+  let sampleSec = '';
+  if(uploaded){
+    sampleSec = '<div class="od-section"><label>样片</label><div class="od-grid">'+
+      '<div class="od-item full"><label>样片文件</label><span>'+esc(p.sample ? p.sample.name : p.material.name.replace('.mp4','_样片.mp4'))+'</span></div>'+
+      '<div class="od-item"><label>规格</label><span>'+esc(p.material.resolution)+' · '+esc(p.material.duration)+'</span></div>'+
+      '<div class="od-item"><label>状态</label><span style="color:var(--green)">已上传</span></div>'+
+    '</div></div>';
+  } else {
+    sampleSec = '<div class="od-section"><label>素材</label><div class="od-grid">'+
+      '<div class="od-item full"><label>素材文件</label><span>'+esc(p.material.name)+'</span></div>'+
+      '<div class="od-item"><label>规格</label><span>'+esc(p.material.resolution)+' · '+esc(p.material.duration)+'</span></div>'+
+    '</div></div>'+
+    '<div class="field"><label>上传样片 <b>*</b></label>'+
+      '<div class="receipt-upload" onclick="document.getElementById(\'sample-file\').click()">'+
+        '<input type="file" id="sample-file" accept="video/*" style="display:none" onchange="onSampleFile(this)">'+
+        '<div class="receipt-empty" id="sample-empty">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'+
+          '<b>点击上传样片</b>'+
+          '<span>支持 MP4 / MOV 视频文件，审核通过后由后台手动上传</span>'+
+        '</div>'+
+        '<div class="receipt-preview" id="sample-preview" style="display:none"></div>'+
+      '</div>'+
+    '</div>';
+  }
+  return head+
     '<div class="od-section"><label>任务信息</label><div class="od-grid">'+
-      '<div class="od-item full"><label>上刊任务号</label><span class="mono">'+esc(p.id)+'</span></div>'+
-      '<div class="od-item"><label>关联订单</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
+      '<div class="od-item full"><label>订单编号</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
       '<div class="od-item"><label>投放日期</label><span>'+esc(p.date)+'</span></div>'+
       '<div class="od-item full"><label>客户 / 影院</label><span>'+esc(p.customer)+' · '+esc(p.cinema)+'</span></div>'+
-    '</div></div>'+
-    '<div class="od-section"><label>样片</label><div class="od-grid">'+
-      '<div class="od-item full"><label>样片文件</label><span>'+esc(p.material.name.replace('.mp4','_样片.mp4'))+'</span></div>'+
-      '<div class="od-item"><label>规格</label><span>'+esc(p.material.resolution)+' · '+esc(p.material.duration)+'</span></div>'+
-      '<div class="od-item"><label>状态</label><span>'+st+'</span></div>'+
-    '</div></div>';
+    '</div></div>'+sampleSec;
 }
 function sampleFoot(p){
   const btns = [];
-  if(p.sampleStatus!=='confirmed'){
-    btns.push('<button class="btn btn-primary" onclick="pubConfirmSample(\''+p.id+'\')">确认样片</button>');
+  if(p.sampleStatus!=='uploaded'){
+    btns.push('<button class="btn btn-primary" onclick="pubUploadSample(\''+p.id+'\')">确认上传样片</button>');
   }
   btns.unshift('<button class="btn btn-ghost" onclick="closeDrawer()">关闭</button>');
   return btns.join('');
 }
-function openSample(id){ const p=pubs.find(x=>x.id===id); if(!p) return; openDrawer('样片确认 · '+p.id, sampleBody(p), sampleFoot(p)); }
+function openSample(id){ const p=pubs.find(x=>x.id===id); if(!p) return; _sampleData = null; openDrawer('样片上传 · '+p.orderId, sampleBody(p), sampleFoot(p)); }
+function onSampleFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  _sampleData = { name: file.name };
+  const empty = document.getElementById('sample-empty');
+  const prev = document.getElementById('sample-preview');
+  if(empty) empty.style.display = 'none';
+  if(prev){ prev.style.display = 'block'; prev.innerHTML = '<div style="padding:16px;color:var(--cyan);font-size:13px;text-align:center">✓ 已选择：'+esc(file.name)+'</div>'; }
+}
+
+let _monitorData = null;
+function monitorBody(p){
+  const uploaded = !!p.monitor;
+  const head = uploaded
+    ? '<div class="od-status ic-confirmed"><div class="od-status-ico">✓</div><div class="od-status-copy"><b>监播证已上传</b><span>监播证已上传，可进入交付与回传</span></div></div>'
+    : '<div class="od-status ic-following"><div class="od-status-ico">▶</div><div class="od-status-copy"><b>待上传监播证</b><span>样片已上传，请上传监播证图片</span></div></div>';
+  let monSec = '';
+  if(uploaded){
+    monSec = '<div class="od-section"><label>监播证</label><div class="od-grid">'+
+      '<div class="od-item full"><div class="receipt-show"><img src="'+p.monitor.dataUrl+'" alt="监播证"></div></div>'+
+      '<div class="od-item"><label>文件</label><span>'+esc(p.monitor.name)+'</span></div>'+
+      '<div class="od-item"><label>上传时间</label><span>'+esc(p.monitor.time)+'</span></div>'+
+    '</div></div>';
+  } else {
+    monSec = '<div class="field"><label>上传监播证 <b>*</b></label>'+
+      '<div class="receipt-upload" onclick="document.getElementById(\'monitor-file\').click()">'+
+        '<input type="file" id="monitor-file" accept="image/*" style="display:none" onchange="onMonitorFile(this)">'+
+        '<div class="receipt-empty" id="monitor-empty">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>'+
+          '<b>点击上传监播证</b>'+
+          '<span>支持 JPG / PNG 图片，上传监播证明截图</span>'+
+        '</div>'+
+        '<div class="receipt-preview" id="monitor-preview" style="display:none"></div>'+
+      '</div>'+
+    '</div>';
+  }
+  return head+
+    '<div class="od-section"><label>任务信息</label><div class="od-grid">'+
+      '<div class="od-item full"><label>订单编号</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
+      '<div class="od-item"><label>投放日期</label><span>'+esc(p.date)+'</span></div>'+
+      '<div class="od-item full"><label>客户 / 影院</label><span>'+esc(p.customer)+' · '+esc(p.cinema)+'</span></div>'+
+    '</div></div>'+
+    '<div class="od-section"><label>样片</label><div class="od-grid">'+
+      '<div class="od-item full"><label>样片文件</label><span>'+esc(p.sample ? p.sample.name : '—')+'</span></div>'+
+    '</div></div>'+monSec;
+}
+function monitorFoot(p){
+  const btns = [];
+  if(!p.monitor){
+    btns.push('<button class="btn btn-primary" onclick="pubUploadMonitor(\''+p.id+'\')">确认上传监播证</button>');
+  }
+  btns.unshift('<button class="btn btn-ghost" onclick="closeDrawer()">关闭</button>');
+  return btns.join('');
+}
+function openMonitor(id){ const p=pubs.find(x=>x.id===id); if(!p) return; _monitorData = null; openDrawer('监播证上传 · '+p.orderId, monitorBody(p), monitorFoot(p)); }
+function onMonitorFile(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    _monitorData = { name: file.name, dataUrl: e.target.result };
+    const empty = document.getElementById('monitor-empty');
+    const prev = document.getElementById('monitor-preview');
+    if(empty) empty.style.display = 'none';
+    if(prev){ prev.style.display = 'block'; prev.innerHTML = '<img src="'+e.target.result+'" alt="监播证">'; }
+  };
+  reader.readAsDataURL(file);
+}
 
 function deliverBody(p){
   const report = p.report ? '<div class="od-item"><label>上刊报告</label><span style="color:var(--green)">已上传 · PDF</span></div>' : '<div class="od-item"><label>上刊报告</label><span style="color:var(--amber)">待上传</span></div>';
   const video = p.video ? '<div class="od-item"><label>实拍视频</label><span style="color:var(--green)">已上传 · MP4</span></div>' : '<div class="od-item"><label>实拍视频</label><span style="color:var(--amber)">待上传</span></div>';
   return '<div class="od-status '+(p.delivered?'ic-confirmed':'ic-following')+'"><div class="od-status-ico">'+(p.delivered?'✓':'▶')+'</div><div class="od-status-copy"><b>'+(p.delivered?'已回传客户':'待回传')+'</b><span>'+(p.delivered?'上刊报告与实拍视频已回传客户':'上传上刊报告与实拍视频后回传客户')+'</span></div></div>'+
     '<div class="od-section"><label>任务信息</label><div class="od-grid">'+
-      '<div class="od-item full"><label>上刊任务号</label><span class="mono">'+esc(p.id)+'</span></div>'+
-      '<div class="od-item"><label>关联订单</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
+      '<div class="od-item full"><label>订单编号</label><span class="mono">'+esc(p.orderId)+'</span></div>'+
       '<div class="od-item"><label>投放日期</label><span>'+esc(p.date)+'</span></div>'+
       '<div class="od-item full"><label>客户 / 影院</label><span>'+esc(p.customer)+' · '+esc(p.cinema)+'</span></div>'+
     '</div></div>'+
@@ -2750,7 +3081,7 @@ function deliverFoot(p){
   btns.unshift('<button class="btn btn-ghost" onclick="closeDrawer()">关闭</button>');
   return btns.join('');
 }
-function openDeliver(id){ const p=pubs.find(x=>x.id===id); if(!p) return; openDrawer('交付与回传 · '+p.id, deliverBody(p), deliverFoot(p)); }
+function openDeliver(id){ const p=pubs.find(x=>x.id===id); if(!p) return; openDrawer('交付与回传 · '+p.orderId, deliverBody(p), deliverFoot(p)); }
 
 /* 状态流转 */
 function pubApprove(id){
@@ -2768,10 +3099,23 @@ function pubReject(id){
   toast2('素材已驳回');
   closeDrawer(); renderPage('publish');
 }
-function pubConfirmSample(id){
+function pubUploadSample(id){
   const p = pubs.find(x=>x.id===id); if(!p) return;
-  p.sampleStatus = 'confirmed';
-  toast2('样片已确认，可进入上刊');
+  if(!_sampleData){ toast2('请先选择样片文件'); return; }
+  p.sampleStatus = 'uploaded';
+  p.sample = { name: _sampleData.name };
+  _sampleData = null;
+  toast2('样片已上传，订单进入「投放中」');
+  closeDrawer(); renderPage('publish');
+}
+function pubUploadMonitor(id){
+  const p = pubs.find(x=>x.id===id); if(!p) return;
+  if(!_monitorData){ toast2('请先上传监播证图片'); return; }
+  const now = new Date(), pad = n=>String(n).padStart(2,'0');
+  const time = now.getFullYear()+'/'+pad(now.getMonth()+1)+'/'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  p.monitor = { name: _monitorData.name, dataUrl: _monitorData.dataUrl, time: time };
+  _monitorData = null;
+  toast2('监播证已上传');
   closeDrawer(); renderPage('publish');
 }
 function pubUploadMaterials(id){
@@ -2790,33 +3134,45 @@ function pubDeliver(id){
 /* 页面渲染 */
 PAGE.publish = function(){
   const c = pubCounts();
+  const q = pubSearch.toLowerCase();
   const tabs = [
     { k:'audit', label:'素材审核', ico:'⏳', n:c.audit },
-    { k:'sample', label:'样片确认', ico:'▶', n:c.sample },
+    { k:'sample', label:'样片上传', ico:'▶', n:c.sample },
+    { k:'monitor', label:'监播证上传', ico:'🛡', n:c.monitor },
     { k:'deliver', label:'交付与回传', ico:'↑', n:c.deliver },
     { k:'spec', label:'素材规范配置', ico:'⚙', n:'' },
   ];
   const tabHTML = '<div class="pub-tabs">'+tabs.map(t=>'<button class="pub-tab'+(pubTab===t.k?' active':'')+'" onclick="setPubTab(\''+t.k+'\')">'+t.ico+' '+t.label+(t.n!==''?'<span class="t-num">'+t.n+'</span>':'')+'</button>').join('')+'</div>';
+  const searchHTML = pubTab==='spec' ? '' :
+    '<div class="toolbar reveal" style="animation-delay:.08s">'+
+      '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="pub-q" placeholder="搜索订单编号…" value="'+esc(pubSearch)+'" oninput="setPubSearch(this.value)"></div>'+
+    '</div>';
 
   let body = '';
   if(pubTab==='audit'){
-    const list = pubs.filter(p=>p.mStatus==='review');
+    const list = pubs.filter(p=>p.mStatus==='review' && (!q || p.orderId.toLowerCase().includes(q)));
     const rows = list.map(auditRow).join('');
     const empty = list.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:44px;color:var(--faint)">没有待审核素材</td></tr>';
     body = '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>待审核素材</h3><span class="count">共 '+list.length+' 条</span></div><div class="table-wrap"><table>'+
-      '<thead><tr><th>任务号</th><th>客户 / 影院</th><th>素材</th><th>投放日期</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
+      '<thead><tr><th>订单编号</th><th>客户 / 影院</th><th>素材</th><th>投放日期</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
   } else if(pubTab==='sample'){
-    const list = pubs.filter(p=>p.mStatus==='approved' && p.sampleStatus!=='confirmed');
+    const list = pubs.filter(p=>p.mStatus==='approved' && p.sampleStatus!=='uploaded' && (!q || p.orderId.toLowerCase().includes(q)));
     const rows = list.map(sampleRow).join('');
-    const empty = list.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:44px;color:var(--faint)">没有待确认样片</td></tr>';
-    body = '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>样片确认</h3><span class="count">共 '+list.length+' 条</span></div><div class="table-wrap"><table>'+
-      '<thead><tr><th>任务号</th><th>客户 / 影院</th><th>素材</th><th>投放日期</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
+    const empty = list.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:44px;color:var(--faint)">没有待上传样片</td></tr>';
+    body = '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>样片上传</h3><span class="count">共 '+list.length+' 条</span></div><div class="table-wrap"><table>'+
+      '<thead><tr><th>订单编号</th><th>客户 / 影院</th><th>素材</th><th>投放日期</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
+  } else if(pubTab==='monitor'){
+    const list = pubs.filter(p=>p.sampleStatus==='uploaded' && !p.monitor && (!q || p.orderId.toLowerCase().includes(q)));
+    const rows = list.map(monitorRow).join('');
+    const empty = list.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:44px;color:var(--faint)">没有待上传监播证</td></tr>';
+    body = '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>监播证上传</h3><span class="count">共 '+list.length+' 条</span></div><div class="table-wrap"><table>'+
+      '<thead><tr><th>订单编号</th><th>客户 / 影院</th><th>素材</th><th>投放日期</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
   } else if(pubTab==='deliver'){
-    const list = pubs.filter(p=>p.sampleStatus==='confirmed');
+    const list = pubs.filter(p=>p.sampleStatus==='uploaded' && p.monitor && (!q || p.orderId.toLowerCase().includes(q)));
     const rows = list.map(deliverRow).join('');
     const empty = list.length ? '' : '<tr><td colspan="6" style="text-align:center;padding:44px;color:var(--faint)">没有待交付任务</td></tr>';
     body = '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>交付与回传</h3><span class="count">共 '+list.length+' 条</span></div><div class="table-wrap"><table>'+
-      '<thead><tr><th>任务号</th><th>客户 / 影院</th><th>投放日期</th><th>材料</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
+      '<thead><tr><th>订单编号</th><th>客户 / 影院</th><th>投放日期</th><th>材料</th><th>状态</th><th>操作</th></tr></thead><tbody>'+rows+empty+'</tbody></table></div></div>';
   } else {
     body = '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>素材规范配置</h3><span class="count">上刊素材统一规范</span></div>'+
       '<div style="padding:18px"><div class="spec-grid">'+specItems()+'</div>'+
@@ -2827,23 +3183,33 @@ PAGE.publish = function(){
 
   const totalAudit = c.audit;
   const totalSample = c.sample;
-  const totalDeliver = pubs.filter(p=>p.sampleStatus==='confirmed' && !p.delivered).length;
+  const totalMonitor = c.monitor;
+  const totalDeliver = pubs.filter(p=>p.sampleStatus==='uploaded' && p.monitor && !p.delivered).length;
+  const totalInDelivery = pubs.filter(p=>p.sampleStatus==='uploaded' && p.monitor).length;
   const doneCnt = pubs.filter(p=>p.delivered).length;
 
   return ''+
   '<div class="page-head reveal">'+
     '<div class="page-title"><span class="eyebrow">订单与交付</span>上刊管理</div>'+
-    '<p class="page-desc">管理上刊交付全流程：素材审核、样片确认与上刊报告/实拍视频的回传，字段与小程序上刊流程对应。</p>'+
+    '<p class="page-desc">管理上刊交付全流程：素材审核、样片上传、监播证上传与上刊报告/实拍视频的回传，字段与小程序上刊流程对应。</p>'+
   '</div>'+
 
   '<div class="kpi-grid">'+
     '<div class="kpi reveal" style="animation-delay:.03s"><div class="k-top"><span class="k-label">待审核素材</span><span class="k-ico" style="background:var(--amber-soft);color:var(--amber)">⏳</span></div><div class="k-value">'+totalAudit+'<small>条</small></div><div class="k-sub">等待人工审核</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.06s"><div class="k-top"><span class="k-label">待确认样片</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">▶</span></div><div class="k-value">'+totalSample+'<small>条</small></div><div class="k-sub">等待客户确认</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.09s"><div class="k-top"><span class="k-label">待回传交付</span><span class="k-ico" style="background:var(--cyan-soft);color:var(--cyan)">↑</span></div><div class="k-value">'+totalDeliver+'<small>条</small></div><div class="k-sub">上刊报告 / 实拍视频</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.12s"><div class="k-top"><span class="k-label">已回传</span><span class="k-ico" style="background:var(--green-soft);color:var(--green)">✓</span></div><div class="k-value">'+doneCnt+'<small>条</small></div><div class="k-sub">交付完成归档</div></div>'+
+    '<div class="kpi reveal" style="animation-delay:.06s"><div class="k-top"><span class="k-label">待上传样片</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">▶</span></div><div class="k-value">'+totalSample+'<small>条</small></div><div class="k-sub">素材已审核通过</div></div>'+
+    '<div class="kpi reveal" style="animation-delay:.09s"><div class="k-top"><span class="k-label">待上传监播证</span><span class="k-ico" style="background:var(--gold-soft);color:var(--gold)">🛡</span></div><div class="k-value">'+totalMonitor+'<small>条</small></div><div class="k-sub">样片已上传</div></div>'+
+    '<div class="kpi reveal" style="animation-delay:.12s"><div class="k-top"><span class="k-label">交付与回传</span><span class="k-ico" style="background:var(--cyan-soft);color:var(--cyan)">↑</span></div><div class="k-value">'+totalInDelivery+'<small>条</small></div><div class="k-sub">待回传 '+totalDeliver+' · 已回传 '+doneCnt+'</div></div>'+
   '</div>'+
 
-  tabHTML+body;
+  tabHTML+searchHTML+body;
+};
+
+PAGE.after = PAGE.after || {};
+PAGE.after.publish = function(){
+  if(pubTab!=='spec'){
+    const el = document.getElementById('pub-q');
+    if(el){ el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+  }
 };
 
 /* 当前设计模块初始化：上刊管理 */
@@ -4319,7 +4685,7 @@ const NOTICE_TPL_SEED = [
 const NOTICE_TRIGGER_SEED = [
   { key:'pay_ok',         label:'订单支付成功',   ico:'¥', tpl:'MB20260901001', target:'下单用户', enabled:true,  desc:'支付完成后向用户推送支付成功通知' },
   { key:'material_audit', label:'素材审核结果',   ico:'▶', tpl:'MB20260901002', target:'下单用户', enabled:true,  desc:'素材审核通过 / 驳回时通知用户' },
-  { key:'sample_confirm', label:'样片待确认',     ico:'🎬', tpl:'MB20260901002', target:'下单用户', enabled:true,  desc:'样片上传完成后提醒用户确认' },
+  { key:'monitor_upload', label:'监播证已上传',   ico:'🛡', tpl:'MB20260901002', target:'下单用户', enabled:true,  desc:'监播证上传完成后通知用户' },
   { key:'launch_done',    label:'上刊完成',       ico:'✓', tpl:'MB20260901002', target:'下单用户', enabled:true,  desc:'上刊确认完成后通知用户' },
   { key:'package_quote',  label:'包场报价已出',   ico:'▣', tpl:'MB20260901003', target:'询价客户', enabled:true,  desc:'客服录入报价后通知客户查看' },
   { key:'package_follow', label:'包场客服跟进',   ico:'☎', tpl:'MB20260901003', target:'询价客户', enabled:false, desc:'客服开始跟进时通知客户' },
