@@ -920,6 +920,7 @@ renderPage('dashboard');
 /* =====================================================
    模块：影院管理
 ===================================================== */
+const _cinemaImg = p => 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt='+encodeURIComponent(p)+'&image_size=landscape_16_9';
 const CINEMA_SEED = [
   {name:'CGV影城（长沙岳麓店）',province:'湖南省',city:'长沙市',district:'岳麓区',area:'岳麓区 · 银盆南路36号',distance:'1.2km',boxOffice:6200,price:4800,icon:'◉',tags:['IMAX','杜比厅','可投放'],seats:1200,halls:8,lng:112.9388,lat:28.2282,chain:'CGV院线',intro:'位于岳麓区核心商圈，IMAX 与杜比全景声双旗舰厅，客流稳定，是区域头部影城。',status:'on'},
   {name:'万达影城（长沙梅溪湖店）',province:'湖南省',city:'长沙市',district:'岳麓区',area:'岳麓区 · 梅溪湖路188号',distance:'3.5km',boxOffice:5800,price:4500,icon:'▣',tags:['IMAX','停车方便','热度高'],seats:1500,halls:10,lng:112.8746,lat:28.2006,chain:'万达院线',intro:'梅溪湖片区地标影院，配备 IMAX 巨幕，家庭与白领客群集中，停车便利。',status:'on'},
@@ -929,9 +930,9 @@ const CINEMA_SEED = [
   {name:'博纳国际影城（长沙天心店）',province:'湖南省',city:'长沙市',district:'天心区',area:'天心区 · 黄兴南路268号',distance:'9.2km',boxOffice:1200,price:2200,icon:'❖',tags:['可投放'],seats:700,halls:5,lng:112.9788,lat:28.1872,chain:'博纳院线',intro:'天心区黄兴南路商圈，人流密集，年轻客群为主。',status:'on'},
   {name:'星耀影城（长沙望城店）',province:'湖南省',city:'长沙市',district:'望城区',area:'望城区 · 普瑞大道66号',distance:'14km',boxOffice:680,price:1800,icon:'✪',tags:['可投放'],seats:500,halls:4,lng:112.8195,lat:28.3536,chain:'星耀院线',intro:'望城区社区影院，覆盖周边居民，性价比突出。',status:'off'},
   {name:'金逸影城（广州天河店）',province:'广东省',city:'广州市',district:'天河区',area:'天河区 · 天河路188号',distance:'—',boxOffice:5400,price:5200,icon:'✧',tags:['IMAX','可投放'],seats:1300,halls:9,lng:113.3277,lat:23.1354,chain:'金逸院线',intro:'广州天河核心商圈 IMAX 旗舰，华南区域标杆影城。',status:'on'},
-  {name:'星汉国际影城（长沙雨花店）',province:'湖南省',city:'长沙市',district:'雨花区',area:'雨花区 · 香樟路88号',distance:'7.2km',boxOffice:1500,price:2600,icon:'◈',tags:['可投放'],seats:760,halls:6,lng:113.0190,lat:28.1312,chain:'星汉院线',intro:'雨花区社区影院，周边居民与高校客群活跃。',source:'onboard',status:'on'},
-  {name:'云顶影城（长沙天心店）',province:'湖南省',city:'长沙市',district:'天心区',area:'天心区 · 书院路99号',distance:'8.6km',boxOffice:920,price:2250,icon:'◈',tags:['可投放'],seats:640,halls:5,lng:112.9800,lat:28.1520,chain:'云顶院线',intro:'天心区新兴影城，临近书院路商圈，年轻客群为主。',source:'onboard',status:'on'},
-  {name:'万象影城（长沙开福店）',province:'湖南省',city:'长沙市',district:'开福区',area:'开福区 · 湘江北路66号',distance:'7.8km',boxOffice:1150,price:2450,icon:'◈',tags:['可投放'],seats:820,halls:6,lng:112.9850,lat:28.2420,chain:'万象院线',intro:'开福区滨江社区影院，覆盖周边居住与办公客群。',source:'onboard',status:'on'}
+  {name:'星汉国际影城（长沙雨花店）',province:'湖南省',city:'长沙市',district:'雨花区',area:'雨花区 · 香樟路88号',distance:'7.2km',boxOffice:1500,price:2600,icon:'◈',tags:['可投放'],seats:760,halls:6,lng:113.0190,lat:28.1312,chain:'星汉院线',intro:'雨花区社区影院，周边居民与高校客群活跃。',cover:_cinemaImg('modern cinema building exterior with glass facade and neon sign, city street, realistic photography'),envImages:[_cinemaImg('cinema lobby with ticket counter and popcorn stand, modern interior, realistic photography'),_cinemaImg('cinema auditorium with red velvet seats and big movie screen, realistic photography')],source:'onboard',status:'on'},
+  {name:'云顶影城（长沙天心店）',province:'湖南省',city:'长沙市',district:'天心区',area:'天心区 · 书院路99号',distance:'8.6km',boxOffice:920,price:2250,icon:'◈',tags:['可投放'],seats:640,halls:5,lng:112.9800,lat:28.1520,chain:'云顶院线',intro:'天心区新兴影城，临近书院路商圈，年轻客群为主。',cover:_cinemaImg('contemporary cinema exterior at night, illuminated entrance, shopping mall, realistic photography'),envImages:[_cinemaImg('luxury cinema hall with recliner seats, warm lighting, realistic photography'),_cinemaImg('cinema corridor with movie posters, modern interior, realistic photography')],source:'onboard',status:'on'},
+  {name:'万象影城（长沙开福店）',province:'湖南省',city:'长沙市',district:'开福区',area:'开福区 · 湘江北路66号',distance:'7.8km',boxOffice:1150,price:2450,icon:'◈',tags:['可投放'],seats:820,halls:6,lng:112.9850,lat:28.2420,chain:'万象院线',intro:'开福区滨江社区影院，覆盖周边居住与办公客群。',cover:_cinemaImg('cinema building in riverside district, modern architecture, dusk, realistic photography'),envImages:[_cinemaImg('standard cinema auditorium with blue ambient lighting, realistic photography'),_cinemaImg('cinema lobby with self-service ticketing kiosks, realistic photography')],source:'onboard',status:'on'}
 ];
 
 /* 省市区三级联动数据 */
@@ -1128,6 +1129,21 @@ function cinemaFormHTML(c){
   '<div class="field"><label>标签（用 、分隔）</label><input id="f-tags" value="'+esc((c.tags||[]).join('、'))+'" placeholder="IMAX、杜比厅、可投放"></div>'+
   '<div class="field"><label>周期单价 <b>*</b></label><input id="f-price" type="number" value="'+c.price+'"><div class="field-hint">每个投放周期的标准单价（元），有专属折扣的客户将按折扣率结算。</div></div>'+
   '<div class="field"><label>影院简介</label><textarea id="f-intro">'+esc(c.intro)+'</textarea></div>'+
+  '<div class="field"><label>影院封面图 <span style="font-weight:400;color:var(--faint)">（1 张，用于列表与详情头图）</span></label>'+
+    '<div class="img-upload">'+
+      cinemaCoverHTML()+
+      '<input type="file" id="cinema-cover-file" accept="image/*" style="display:none" onchange="onCinemaCover()">'+
+      '<div class="iu-actions">'+
+        '<button class="btn btn-ghost btn-sm" onclick="triggerImageUpload(\'cinema-cover-file\')">上传封面图</button>'+
+        (_cinemaFormCover?'<button class="btn btn-ghost btn-sm" onclick="clearCinemaCover()">移除</button>':'')+
+      '</div>'+
+    '</div>'+
+  '</div>'+
+  '<div class="field"><label>影院环境图 <span style="font-weight:400;color:var(--faint)">（最多 15 张）</span></label>'+
+    '<div id="cinema-images-wrap">'+cinemaImagesHTML()+'</div>'+
+    '<input type="file" id="cinema-images-file" accept="image/*" style="display:none" onchange="onCinemaImages()">'+
+    '<button class="btn btn-ghost btn-sm" style="margin-top:8px" onclick="triggerImageUpload(\'cinema-images-file\')">+ 添加环境图</button>'+
+  '</div>'+
   '<div class="field" style="display:flex;align-items:center;justify-content:space-between">'+
     '<div><label style="margin:0">上架状态</label><div class="field-hint">下架后前台不可见、不可下单</div></div>'+
     '<label class="switch"><input type="checkbox" id="f-status" '+(c.status==='on'?'checked':'')+'><span class="track"></span></label>'+
@@ -1137,6 +1153,8 @@ function editCinema(i, focusPrice){
   editingIndex = i;
   const c = i>=0 ? cinemas[i] : null;
   _formCoords = { lng: (c && c.lng!=null) ? c.lng : null, lat: (c && c.lat!=null) ? c.lat : null };
+  _cinemaFormCover = (c && c.cover) ? c.cover : '';
+  _cinemaFormImages = (c && c.envImages) ? c.envImages.slice() : [];
   openDrawer(i>=0?'编辑影院':'新增影院', cinemaFormHTML(c),
     '<button class="btn btn-ghost" onclick="closeDrawer()">取消</button>'+
     '<button class="btn btn-primary" onclick="saveCinema()">保存</button>');
@@ -1144,7 +1162,37 @@ function editCinema(i, focusPrice){
 /* 地图选址弹层 */
 let _mapModal = null;
 let _formCoords = { lng: null, lat: null };
+let _cinemaFormCover = '';
+let _cinemaFormImages = [];
 let _mapState = { center:DEFAULT_CENTER.slice(), lng:null, lat:null };
+
+/* 影院封面图 / 环境图上传 */
+function cinemaCoverHTML(){
+  return '<div class="iu-preview'+(_cinemaFormCover?' has-img':'')+'" id="cinema-cover-iu" onclick="triggerImageUpload(\'cinema-cover-file\')"'+
+    (_cinemaFormCover?' style="background-image:url(\''+_cinemaFormCover+'\')"':'')+'>'+
+    (_cinemaFormCover?'':'<div class="iu-ico">'+IMG_ICO+'</div><div class="iu-hint">点击上传封面图</div>')+
+  '</div>';
+}
+function cinemaImagesHTML(){
+  if(!_cinemaFormImages.length) return '<div class="muted" style="font-size:12px;padding:4px 0">尚未添加环境图</div>';
+  return '<div style="display:flex;flex-wrap:wrap;gap:10px">'+_cinemaFormImages.map((u,i)=>
+    '<div style="position:relative;width:92px;height:69px;border-radius:8px;border:1px solid var(--line);background-size:cover;background-position:center;background-image:url(\''+u+'\')">'+
+      '<button type="button" onclick="removeCinemaImage('+i+')" style="position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;border:none;background:#e5484d;color:#fff;font-size:12px;line-height:1;cursor:pointer">×</button>'+
+    '</div>').join('')+'</div>';
+}
+function onCinemaCover(){ readImageFile('cinema-cover-file', function(data){ _cinemaFormCover=data; refreshCinemaCover(); }); }
+function clearCinemaCover(){ _cinemaFormCover=''; refreshCinemaCover(); }
+function refreshCinemaCover(){
+  const p = document.getElementById('cinema-cover-iu'); if(!p) return;
+  if(_cinemaFormCover){ p.style.backgroundImage="url('"+_cinemaFormCover+"')"; p.classList.add('has-img'); p.innerHTML=''; }
+  else { p.style.backgroundImage=''; p.classList.remove('has-img'); p.innerHTML='<div class="iu-ico">'+IMG_ICO+'</div><div class="iu-hint">点击上传封面图</div>'; }
+  const a = p.parentElement.querySelector('.iu-actions');
+  if(a) a.innerHTML='<button class="btn btn-ghost btn-sm" onclick="triggerImageUpload(\'cinema-cover-file\')">上传封面图</button>'+
+    (_cinemaFormCover?'<button class="btn btn-ghost btn-sm" onclick="clearCinemaCover()">移除</button>':'');
+}
+function onCinemaImages(){ readImageFile('cinema-images-file', function(data){ if(_cinemaFormImages.length>=15){ toast2('最多上传 15 张环境图'); return; } _cinemaFormImages.push(data); refreshCinemaImages(); }); }
+function removeCinemaImage(i){ _cinemaFormImages.splice(i,1); refreshCinemaImages(); }
+function refreshCinemaImages(){ const w=document.getElementById('cinema-images-wrap'); if(w) w.innerHTML = cinemaImagesHTML(); }
 function ensureMapModal(){
   if(_mapModal) return _mapModal;
   _mapModal = document.createElement('div');
@@ -1230,6 +1278,7 @@ function saveCinema(){
     lng: (lng==null || isNaN(lng))?null:lng, lat: (lat==null || isNaN(lat))?null:lat,
     price:+g('f-price').value||0,
     tags, intro:g('f-intro').value.trim(),
+    cover: _cinemaFormCover, envImages: _cinemaFormImages.slice(),
     status:g('f-status').checked?'on':'off'
   };
   if(!data.name){ toast2('请填写影院名称'); return; }
@@ -4532,14 +4581,14 @@ const OB_TYPE = {
 };
 const ONBOARD_SEED = [
   { id:'OB20260920001', applicant:'林知远 · 138****2088', identity:'个人身份', type:'apply', status:'pending', rejectReason:'', applyAt:'2026/09/20 14:30',
-    data:{ name:'光影巨幕影城（长沙星沙店）', chain:'光影院线', boxOffice:2100, province:'湖南省', city:'长沙市', district:'长沙县', area:'长沙县 · 星沙大道188号', lng:113.0810, lat:28.2461, halls:7, seats:920, defaultStock:5, tags:'IMAX、杜比厅、可投放', price:3000, intro:'星沙片区新建影城，配备 IMAX 巨幕，覆盖周边社区与产业园客群。' } },
+    data:{ name:'光影巨幕影城（长沙星沙店）', chain:'光影院线', boxOffice:2100, province:'湖南省', city:'长沙市', district:'长沙县', area:'长沙县 · 星沙大道188号', lng:113.0810, lat:28.2461, halls:7, seats:920, defaultStock:5, tags:'IMAX、杜比厅、可投放', price:3000, intro:'星沙片区新建影城，配备 IMAX 巨幕，覆盖周边社区与产业园客群。', cover:_cinemaImg('large cinema complex exterior with IMAX sign, modern architecture, realistic photography'), envImages:[_cinemaImg('IMAX theater interior with huge curved screen, stadium seating, realistic photography'),_cinemaImg('modern cinema lobby interior with ticket counter, realistic photography')] } },
   { id:'OB20260925002', applicant:'张伟 · 135****1186', identity:'企业身份', type:'change', status:'pending', rejectReason:'', applyAt:'2026/09/25 09:10',
-    before:{ name:'万达影城（长沙梅溪湖店）', chain:'万达院线', boxOffice:5800, province:'湖南省', city:'长沙市', district:'岳麓区', area:'岳麓区 · 梅溪湖路188号', lng:112.8746, lat:28.2006, halls:10, seats:1500, defaultStock:6, tags:'IMAX、停车方便、热度高', price:4500, intro:'梅溪湖片区地标影院，配备 IMAX 巨幕，家庭与白领客群集中，停车便利。' },
-    data:{ name:'万达影城（长沙梅溪湖店）', chain:'万达院线', boxOffice:5800, province:'湖南省', city:'长沙市', district:'岳麓区', area:'岳麓区 · 梅溪湖路188号', lng:112.8746, lat:28.2006, halls:11, seats:1600, defaultStock:8, tags:'IMAX、停车方便、热度高', price:5200, intro:'梅溪湖片区地标影院，配备 IMAX 巨幕，家庭与白领客群集中，停车便利。' } },
+    before:{ name:'万达影城（长沙梅溪湖店）', chain:'万达院线', boxOffice:5800, province:'湖南省', city:'长沙市', district:'岳麓区', area:'岳麓区 · 梅溪湖路188号', lng:112.8746, lat:28.2006, halls:10, seats:1500, defaultStock:6, tags:'IMAX、停车方便、热度高', price:4500, intro:'梅溪湖片区地标影院，配备 IMAX 巨幕，家庭与白领客群集中，停车便利。', cover:_cinemaImg('cinema building in shopping mall, illuminated entrance at night, realistic photography'), envImages:[_cinemaImg('luxury cinema hall with leather recliner seats, realistic photography'),_cinemaImg('cinema concession stand with popcorn, realistic photography')] },
+    data:{ name:'万达影城（长沙梅溪湖店）', chain:'万达院线', boxOffice:5800, province:'湖南省', city:'长沙市', district:'岳麓区', area:'岳麓区 · 梅溪湖路188号', lng:112.8746, lat:28.2006, halls:11, seats:1600, defaultStock:8, tags:'IMAX、停车方便、热度高', price:5200, intro:'梅溪湖片区地标影院，配备 IMAX 巨幕，家庭与白领客群集中，停车便利。', cover:_cinemaImg('cinema building in shopping mall, illuminated entrance at night, realistic photography'), envImages:[_cinemaImg('luxury cinema hall with leather recliner seats, realistic photography'),_cinemaImg('cinema concession stand with popcorn, realistic photography')] } },
   { id:'OB20260915003', applicant:'陈启明 · 139****6612', identity:'企业身份', type:'apply', status:'approved', rejectReason:'', applyAt:'2026/09/15 10:20',
-    data:{ name:'星汉国际影城（长沙雨花店）', chain:'星汉院线', boxOffice:1500, province:'湖南省', city:'长沙市', district:'雨花区', area:'雨花区 · 香樟路88号', lng:113.0190, lat:28.1312, halls:6, seats:760, defaultStock:4, tags:'可投放', price:2600, intro:'雨花区社区影院，周边居民与高校客群活跃。' } },
+    data:{ name:'星汉国际影城（长沙雨花店）', chain:'星汉院线', boxOffice:1500, province:'湖南省', city:'长沙市', district:'雨花区', area:'雨花区 · 香樟路88号', lng:113.0190, lat:28.1312, halls:6, seats:760, defaultStock:4, tags:'可投放', price:2600, intro:'雨花区社区影院，周边居民与高校客群活跃。', cover:_cinemaImg('modern cinema exterior with glass facade, city street, realistic photography'), envImages:[_cinemaImg('cinema auditorium with red velvet seats and big movie screen, realistic photography'),_cinemaImg('cinema lobby with ticket counter, realistic photography')] } },
   { id:'OB20260910004', applicant:'王若琳 · 137****3309', identity:'企业身份', type:'apply', status:'rejected', rejectReason:'影院资质信息不完整，请核实后重新提交', applyAt:'2026/09/10 16:45',
-    data:{ name:'拾光影院（长沙望城店）', chain:'拾光影业', boxOffice:600, province:'湖南省', city:'长沙市', district:'望城区', area:'望城区 · 雷锋大道200号', lng:112.8300, lat:28.3600, halls:4, seats:520, defaultStock:3, tags:'可投放', price:1900, intro:'望城区社区影院，覆盖周边居民。' } },
+    data:{ name:'拾光影院（长沙望城店）', chain:'拾光影业', boxOffice:600, province:'湖南省', city:'长沙市', district:'望城区', area:'望城区 · 雷锋大道200号', lng:112.8300, lat:28.3600, halls:4, seats:520, defaultStock:3, tags:'可投放', price:1900, intro:'望城区社区影院，覆盖周边居民。', cover:_cinemaImg('small community cinema exterior, cozy, daytime, realistic photography'), envImages:[_cinemaImg('standard cinema hall interior with screen, realistic photography')] } },
 ];
 let obApps = JSON.parse(JSON.stringify(ONBOARD_SEED));
 let obFilter = { q:'', status:'pending', type:'all' };
@@ -4634,12 +4683,16 @@ function openOb(id){
     '<div class="od-item"><label>申请时间</label><span>'+esc(a.applyAt)+'</span></div>'+
     '<div class="od-item"><label>入驻状态</label><span class="pill '+st.cls+'">'+st.label+'</span></div>'+
   '</div></div>';
+  const imgs = '<div class="od-section"><label>影院图片</label><div class="od-grid">'+
+    (d.cover ? '<div class="od-item full"><label>封面图</label><div style="display:flex;gap:10px;margin-top:2px"><img src="'+d.cover+'" style="width:140px;height:88px;object-fit:cover;border-radius:9px;border:1px solid var(--line)"></div></div>' : '')+
+    (d.envImages && d.envImages.length ? '<div class="od-item full"><label>环境图（'+d.envImages.length+' 张）</label><div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:2px">'+d.envImages.map(u=>'<img src="'+u+'" style="width:92px;height:69px;object-fit:cover;border-radius:8px;border:1px solid var(--line)">').join('')+'</div></div>' : '')+
+  '</div></div>';
   const diff = obDiff(a);
   const reject = a.rejectReason ? '<div class="od-section"><label>驳回原因</label><div class="od-change" style="background:var(--red-soft);border-color:rgba(238,111,101,.4)"><b style="color:var(--red)">入驻被驳回</b><p>'+esc(a.rejectReason)+'</p></div></div>' : '';
   const foot = a.status==='pending'
     ? '<button class="btn btn-ghost" onclick="closeDrawer()">关闭</button><button class="btn btn-primary" onclick="obApprove(\''+a.id+'\')">通过</button><button class="btn btn-ghost" onclick="obReject(\''+a.id+'\')">驳回</button>'
     : '<button class="btn btn-ghost" onclick="closeDrawer()">关闭</button>';
-  openDrawer('影院入驻 · '+d.name, head+base+diff+reject, foot);
+  openDrawer('影院入驻 · '+d.name, head+base+imgs+diff+reject, foot);
 }
 function obApprove(id){
   const a=obApps.find(x=>x.id===id); if(!a) return;
