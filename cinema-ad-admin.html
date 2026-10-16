@@ -790,7 +790,7 @@
 ===================================================== */
 const MENU = [
   { group:'工作台', items:[
-    { id:'dashboard', label:'数据看板', icon:'dashboard', desc:'营收 / 上刊率 / 影院热度 / 返本资金规模 / 销售漏斗' },
+    { id:'dashboard', label:'数据看板', icon:'dashboard', desc:'营收 / 上刊率 / 影院热度 / 销售漏斗' },
   ]},
   { group:'商品与内容', items:[
     { id:'cinema',   label:'影院管理',   icon:'cinema',   desc:'影院列表、新增/编辑/上下架、基础信息、周期单价' },
@@ -816,14 +816,14 @@ const MENU = [
     { id:'service',  label:'客服配置',   icon:'service',  desc:'客服电话配置、问题 QA 自动应答' },
   ]},
   { group:'财务中心', items:[
-    { id:'refund',   label:'返本与退款', icon:'wallet',   desc:'权益台账、到期返还审核、退款、提现审核、对账' },
+    { id:'refund',   label:'提现与退款', icon:'wallet',   desc:'退款、钱包提现审核、资金对账' },
     { id:'invoice',  label:'发票管理',   icon:'invoice',  desc:'开票审核、开票、状态管理' },
   ]},
   { group:'系统设置', items:[
     { id:'notice',   label:'消息通知配置', icon:'notice', desc:'模板维护、触发配置' },
     { id:'account',  label:'权限与账号', icon:'account', desc:'角色权限（客服/运营/财务/管理员）、数据范围隔离' },
     { id:'business', label:'业务参数',   icon:'business', desc:'待支付时长、对公账户、下单须知、自动确认上刊、退款规则、素材规范' },
-    { id:'dict',     label:'数据字典',   icon:'dict',     desc:'企业类型、所属行业、退款原因、退款驳回原因、企业认证审核驳回原因、影院入驻审核驳回原因、权益福利商家类型' },
+    { id:'dict',     label:'数据字典',   icon:'dict',     desc:'企业类型、所属行业、退款原因、退款驳回原因、企业认证审核驳回原因、影院入驻审核驳回原因、权益福利商家类型、投放案例分类' },
   ]},
 ];
 
@@ -1395,8 +1395,9 @@ const sfmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-
 const monthLabel = k => { const [y,m]=k.split('-'); return y+'年'+parseInt(m,10)+'月'; };
 
 const Schedules = {};
-const scheduleState = { cinema:'', month:'', province:'all', city:'all', district:'all', q:'', defaultMonths:12, openedBy:{} };
+const scheduleState = { cinema:'', month:'', province:'all', city:'all', district:'all', q:'', defaultMonths:12, openedBy:{}, independent:{} };
 let _batchOpened = {};
+let _batchIndependent = false;
 let _batchYear = new Date().getFullYear();
 function scheduleMonths(){
   const now = new Date();
@@ -1412,15 +1413,25 @@ function defaultOpened(){
   scheduleMonths().forEach(k=>{ o[k]=true; });
   return o;
 }
+function isIndependent(name){ return !!scheduleState.independent[name || scheduleState.cinema]; }
+function schedMonths(){
+  const set = new Set(scheduleMonths());
+  const c = scheduleState.cinema;
+  if(c && isIndependent(c)) Object.keys(scheduleState.openedBy[c]||{}).forEach(k=>set.add(k));
+  return Array.from(set).sort();
+}
 function currentOpened(){
-  if(scheduleState.cinema && scheduleState.openedBy[scheduleState.cinema]) return scheduleState.openedBy[scheduleState.cinema];
+  const c = scheduleState.cinema;
+  if(c && isIndependent(c) && scheduleState.openedBy[c]) return scheduleState.openedBy[c];
   return defaultOpened();
 }
 function ensureCinemaOpened(){
-  if(scheduleState.cinema && !scheduleState.openedBy[scheduleState.cinema]){
-    scheduleState.openedBy[scheduleState.cinema] = defaultOpened();
+  const c = scheduleState.cinema;
+  if(c && isIndependent(c)){
+    if(!scheduleState.openedBy[c]) scheduleState.openedBy[c] = defaultOpened();
+    return scheduleState.openedBy[c];
   }
-  return scheduleState.cinema ? scheduleState.openedBy[scheduleState.cinema] : defaultOpened();
+  return defaultOpened();
 }
 function isMonthOpen(k){ return !!currentOpened()[k]; }
 function openMonth(k){ ensureCinemaOpened()[k] = true; renderPage('schedule'); }
@@ -1482,15 +1493,17 @@ function saveDefaultCycle(){
   let v = Math.max(1, Math.min(12, +document.getElementById('dc-months').value || 12));
   scheduleState.defaultMonths = v;
   Object.keys(Schedules).forEach(k=>delete Schedules[k]);
+  Object.keys(scheduleState.openedBy).forEach(k=>{ if(!scheduleState.independent[k]) delete scheduleState.openedBy[k]; });
   if(!scheduleMonths().includes(scheduleState.month)) scheduleState.month = scheduleMonths()[0];
   closeCaseModal();
-  toast2('已更新默认排期周期为 '+v+' 个月');
+  toast2('已更新默认排期周期为 '+v+' 个月，跟随默认周期的影院已同步');
   renderPage('schedule');
 }
 function openCinemaSchedule(){
   _batchOpened = JSON.parse(JSON.stringify(currentOpened()));
+  _batchIndependent = isIndependent(scheduleState.cinema);
   _batchYear = new Date().getFullYear();
-  openCaseModal('调整影院排期', batchModalBody(),
+  openCaseModal('独立配置排期', batchModalBody(),
     '<button class="btn btn-ghost" onclick="closeCaseModal()">取消</button>'+
     '<button class="btn btn-primary" onclick="saveCinemaSchedule()">保存</button>',
     '520px');
@@ -1519,9 +1532,21 @@ function batchCalHTML(){
   return '<div class="bm-grid">'+cells.join('')+'</div>';
 }
 function batchModalBody(){
-  return '<p class="field-hint" style="margin:0 0 12px">点击月份块切换开放 / 关闭，仅对当前影院「'+esc(scheduleState.cinema)+'」生效；灰色月份为已过去，不可操作。</p>'+
+  const on = _batchIndependent;
+  return ''+
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:14px">'+
+      '<div><b style="font-size:13px;display:block;margin-bottom:3px">独立配置排期</b>'+
+      '<span class="field-hint" style="margin:0">开启后独立管理该影院排期，不受默认周期影响；关闭则跟随默认周期变化。</span></div>'+
+      '<label class="switch"><input type="checkbox" id="cs-independent" '+(on?'checked':'')+' onchange="toggleCinemaIndependent(this.checked)"><span class="track"></span></label>'+
+    '</div>'+
+    '<p class="field-hint" style="margin:0 0 12px">点击月份块切换开放 / 关闭，仅对当前影院「'+esc(scheduleState.cinema)+'」生效；灰色月份为已过去，不可操作。</p>'+
     batchYearNav()+
-    batchCalHTML();
+    '<div id="cs-cal-grid"'+(on?'':' style="opacity:.45;pointer-events:none"')+'>'+batchCalHTML()+'</div>';
+}
+function toggleCinemaIndependent(on){
+  _batchIndependent = on;
+  const g = document.getElementById('cs-cal-grid');
+  if(g){ g.style.opacity = on?'1':'.45'; g.style.pointerEvents = on?'':'none'; }
 }
 function shiftBatchYear(d){
   const cy = new Date().getFullYear();
@@ -1542,11 +1567,20 @@ function toggleBatchMonth(k){
   }
 }
 function saveCinemaSchedule(){
-  if(scheduleState.cinema){
-    scheduleState.openedBy[scheduleState.cinema] = JSON.parse(JSON.stringify(_batchOpened));
+  const c = scheduleState.cinema;
+  const on = _batchIndependent;
+  if(c){
+    delete Schedules[c];
+    if(on){
+      scheduleState.independent[c] = true;
+      scheduleState.openedBy[c] = JSON.parse(JSON.stringify(_batchOpened));
+    } else {
+      delete scheduleState.independent[c];
+      delete scheduleState.openedBy[c];
+    }
   }
   closeCaseModal();
-  toast2('已更新当前影院排期开放月份');
+  toast2(on ? '已开启独立排期并保存开放月份' : '已关闭独立排期，该影院跟随默认周期');
   renderPage('schedule');
 }
 
@@ -1564,7 +1598,15 @@ function buildWeeks(name){
   const weeks = [];
   const now = new Date();
   const cursor = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endMonth = new Date(now.getFullYear(), now.getMonth() + scheduleState.defaultMonths, 1);
+  let spanMonths = scheduleState.defaultMonths;
+  if(isIndependent(name)){
+    Object.keys(scheduleState.openedBy[name]||{}).forEach(k=>{
+      const [y,m] = k.split('-').map(Number);
+      const off = (y - now.getFullYear())*12 + (m-1 - now.getMonth()) + 1;
+      if(off > spanMonths) spanMonths = off;
+    });
+  }
+  const endMonth = new Date(now.getFullYear(), now.getMonth() + spanMonths, 1);
   let i = 0;
   while(cursor < endMonth){
     const end = new Date(cursor); end.setDate(end.getDate()+6);
@@ -1597,7 +1639,7 @@ function weekStatus(w){
 }
 function avOf(w){ return w.total - w.sold - w.lock; }
 
-function shiftMonth(d){ const ms=scheduleMonths(); const i=ms.indexOf(scheduleState.month); const n=i+d; if(n>=0 && n<ms.length){ scheduleState.month=ms[n]; renderPage('schedule'); } }
+function shiftMonth(d){ const ms=schedMonths(); const i=ms.indexOf(scheduleState.month); const n=i+d; if(n>=0 && n<ms.length){ scheduleState.month=ms[n]; renderPage('schedule'); } }
 function setSchedProvince(v){ scheduleState.province=v; scheduleState.city='all'; scheduleState.district='all'; renderPage('schedule'); }
 function setSchedCity(v){ scheduleState.city=v; scheduleState.district='all'; renderPage('schedule'); }
 function setSchedDistrict(v){ scheduleState.district=v; renderPage('schedule'); }
@@ -1735,7 +1777,7 @@ PAGE.schedule = function(){
   const list = schedCinemaList();
   if(!list.some(c=>c.name===scheduleState.cinema)) scheduleState.cinema = list.length ? list[0].name : '';
 
-  const months = scheduleMonths();
+  const months = schedMonths();
   if(!months.includes(scheduleState.month)) scheduleState.month = months[0];
 
   const weeks = curWeeks();
@@ -1777,7 +1819,7 @@ PAGE.schedule = function(){
 
   const body = monthOpen ? (
     '<div class="panel reveal" style="animation-delay:.1s;margin-bottom:16px">'+
-      '<div class="panel-head"><h3>排期日历</h3><span class="count">'+monthLabel(scheduleState.month)+' · '+monthWeeks.length+' 周</span><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openCinemaSchedule()">调整影院排期</button></div>'+
+      '<div class="panel-head"><h3>排期日历</h3><span class="count">'+monthLabel(scheduleState.month)+' · '+monthWeeks.length+' 周 · '+(isIndependent(scheduleState.cinema)?'独立排期':'跟随默认周期')+'</span><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="openCinemaSchedule()">独立配置排期</button></div>'+
       '<div style="padding:16px"><div class="week-grid">'+cards+empty+'</div></div>'+
     '</div>'+
     '<div class="panel reveal" style="animation-delay:.14s">'+
@@ -3137,35 +3179,31 @@ renderPage('orders');
 const PKG_STATUS = {
   pending:   { label:'待处理',   cls:'amber', ico:'⏳', title:'等待受理', sub:'客户已提交包场意向，等待客服受理' },
   following: { label:'跟进中',   cls:'blue',  ico:'☎', title:'跟进中',   sub:'客服已受理，正在沟通确认意向细节' },
-  quoted:    { label:'已报价',   cls:'cyan',  ico:'¥', title:'已报价',   sub:'报价单已发出，等待客户确认' },
-  confirmed: { label:'客户确认', cls:'green', ico:'✓', title:'客户已确认', sub:'客户已接受报价，进入履约阶段' },
+  quoted:    { label:'已报价',   cls:'cyan',  ico:'¥', title:'已报价',   sub:'报价单已发出，等待客户接受' },
   fulfilling:{ label:'履约中',   cls:'green', ico:'▶', title:'履约中',   sub:'包场正在执行中，请按方案推进' },
   done:      { label:'已完成',   cls:'gray',  ico:'✓', title:'已完成',   sub:'包场履约完成，询价单已归档' },
   closed:    { label:'已关闭',   cls:'gray',  ico:'✕', title:'已关闭',   sub:'询价单已关闭' },
 };
-const PKG_FLOW = ['pending','following','quoted','confirmed','fulfilling','done'];
+const PKG_FLOW = ['pending','following','quoted','fulfilling','done'];
 
 const PKG_SEED = [
-  { id:'BK20260918001', cinema:'CGV影城（长沙岳麓店）', date:'2026-09-26', time:'19:00–21:30', hall:'杜比厅', people:'80 人', purpose:'企业团建', budget:'¥10,000–¥20,000', contact:'林小姐', phone:'138****2088', note:'需要片头定制与现场茶歇。', submitTime:'2026/09/18 10:22', status:'quoted',
-    notes:[{from:'client',text:'你好，想包一场杜比厅做企业团建，需要片头定制和茶歇。',time:'09-18 10:22'},{from:'admin',text:'林小姐您好，已为您预留 9/26 晚杜比厅，80 人规模可按团建方案布置，报价单已生成，请查收确认。',time:'09-20 14:20'}],
+  { id:'BK20260918001', cinema:'CGV影城（长沙岳麓店）', date:'2026-09-26', time:'19:00–21:30', hall:'杜比厅', people:'80 人', purpose:'企业团建', budget:'¥10,000–¥20,000', contact:'林小姐', phone:'138****2088', note:'需要片头定制与现场茶歇。', submitTime:'2026/09/18 10:22', status:'quoted', clientRejected:true, clientRejectTime:'09-21 15:30',
+    notes:[{from:'admin',text:'林小姐您好，已为您预留 9/26 晚杜比厅，80 人规模可按团建方案布置，报价单已生成，请查收确认。',time:'09-20 14:20'}],
     quote:{total:'¥18,800',items:[{k:'场地包场费',v:'¥12,000'},{k:'片源定制与放映',v:'¥3,800'},{k:'现场布置与物料',v:'¥2,000'},{k:'茶歇（80 人）',v:'¥1,000'}],remark:'以上报价含税；签订后支付 30% 定金，剩余履约前结清。'} },
   { id:'BK20260910002', cinema:'万达影城（长沙梅溪湖店）', date:'2026-10-02', time:'14:00–17:00', hall:'IMAX厅', people:'60 人', purpose:'求婚告白', budget:'¥20,000–¥50,000', contact:'林先生', phone:'138****2088', note:'', submitTime:'2026/09/10 09:05', status:'following',
-    notes:[{from:'client',text:'国庆期间想包 IMAX 厅求婚，麻烦看看档期。',time:'09-10 09:05'},{from:'admin',text:'已收到您的求婚包场意向，正在协调 IMAX 厅国庆档排期，稍后电话与您确认。',time:'09-16 10:11'}],
+    notes:[{from:'admin',text:'已收到您的求婚包场意向，正在协调 IMAX 厅国庆档排期，稍后电话与您确认。',time:'09-16 10:11'}],
     quote:null },
   { id:'BK20260902003', cinema:'潇湘国际影城（长沙溁湾镇店）', date:'2026-10-15', time:'待定', hall:'均可', people:'120 人', purpose:'学校活动', budget:'¥10,000–¥20,000', contact:'林老师', phone:'138****2088', note:'希望周五下午，适合学生集体观影。', submitTime:'2026/09/02 15:40', status:'pending',
     notes:[], quote:null },
-  { id:'BK20260905004', cinema:'金逸影城（广州天河店）', date:'2026-09-30', time:'19:00–21:30', hall:'IMAX厅', people:'100 人', purpose:'品牌发布会', budget:'¥50,000 以上', contact:'陈总监', phone:'139****6612', note:'需要舞台布置与现场直播支持。', submitTime:'2026/09/05 11:18', status:'confirmed',
-    notes:[{from:'client',text:'发布会方案已确认，请安排。',time:'09-08 16:02'}],
-    quote:{total:'¥56,000',items:[{k:'场地包场费',v:'¥38,000'},{k:'舞台与灯光布置',v:'¥10,000'},{k:'现场直播与摄像',v:'¥6,000'},{k:'茶歇（100 人）',v:'¥2,000'}],remark:'含税；定金 50%，履约前结清尾款。'} },
+  { id:'BK20260905004', cinema:'金逸影城（广州天河店）', date:'2026-09-30', time:'19:00–21:30', hall:'IMAX厅', people:'100 人', purpose:'品牌发布会', budget:'¥50,000 以上', contact:'陈总监', phone:'139****6612', note:'需要舞台布置与现场直播支持。', submitTime:'2026/09/05 11:18', status:'fulfilling',
+    notes:[], quote:{total:'¥56,000',items:[{k:'场地包场费',v:'¥38,000'},{k:'舞台与灯光布置',v:'¥10,000'},{k:'现场直播与摄像',v:'¥6,000'},{k:'茶歇（100 人）',v:'¥2,000'}],remark:'含税；定金 50%，履约前结清尾款。'} },
   { id:'BK20260820005', cinema:'中影国际影城（长沙芙蓉店）', date:'2026-09-05', time:'19:00–21:30', hall:'普通厅', people:'50 人', purpose:'应援', budget:'¥10,000–¥20,000', contact:'王小姐', phone:'137****3309', note:'需要灯牌与应援物料布置。', submitTime:'2026/08/20 20:11', status:'fulfilling',
     notes:[{from:'admin',text:'已锁定 9/5 晚普通厅，应援物料将于当日下午入场布置。',time:'08-22 09:30'}],
     quote:{total:'¥15,500',items:[{k:'场地包场费',v:'¥9,000'},{k:'应援物料布置',v:'¥4,500'},{k:'片源放映',v:'¥2,000'}],remark:'含税，全款已支付。'} },
   { id:'BK20260801006', cinema:'博纳国际影城（长沙天心店）', date:'2026-08-15', time:'14:00–17:00', hall:'普通厅', people:'40 人', purpose:'求婚告白', budget:'面议', contact:'赵先生', phone:'136****5521', note:'', submitTime:'2026/08/01 13:25', status:'done',
-    notes:[{from:'client',text:'谢谢，求婚很顺利！',time:'08-16 20:40'}],
-    quote:{total:'¥8,800',items:[{k:'场地包场费',v:'¥6,000'},{k:'求婚物料与花艺',v:'¥2,800'}],remark:'含税，全款已结清。'} },
+    notes:[], quote:{total:'¥8,800',items:[{k:'场地包场费',v:'¥6,000'},{k:'求婚物料与花艺',v:'¥2,800'}],remark:'含税，全款已结清。'} },
   { id:'BK20260815007', cinema:'万达影城（长沙开福店）', date:'2026-09-20', time:'19:00–21:30', hall:'杜比厅', people:'90 人', purpose:'企业团建', budget:'¥10,000–¥20,000', contact:'刘经理', phone:'135****1186', note:'', submitTime:'2026/08/15 10:00', status:'closed', closeReason:'客户因档期冲突取消，询价单已关闭',
-    notes:[{from:'client',text:'公司行程调整，暂时取消，抱歉。',time:'08-18 11:02'}],
-    quote:null },
+    notes:[], quote:null },
 ];
 let pkgs = JSON.parse(JSON.stringify(PKG_SEED));
 let pkgFilter = { q:'', status:'all' };
@@ -3211,7 +3249,7 @@ function pkgStatusHead(p){
 }
 function pkgStepsHTML(p){
   if(p.status==='closed') return '';
-  const labels = ['提交','受理','报价','确认','履约','完成'];
+  const labels = ['提交','受理','报价','履约','完成'];
   const idx = PKG_FLOW.indexOf(p.status);
   const cur = idx<0 ? 0 : idx;
   return '<div class="od-steps">'+labels.map((s,i)=>{
@@ -3220,10 +3258,10 @@ function pkgStepsHTML(p){
   }).join('')+'</div>';
 }
 function pkgNotesHTML(p){
-  if(!p.notes || !p.notes.length) return '<div class="pq-empty">暂无留言，可通过下方输入框回复客户</div>';
-  return '<div class="msg-list">'+p.notes.map(n=>{
-    const mine = n.from==='admin';
-    return '<div class="msg-item'+(mine?' mine':'')+'"><div class="msg-bubble">'+esc(n.text)+'</div><div class="msg-meta">'+(mine?'客服 · ':'客户 · ')+esc(n.time)+'</div></div>';
+  const notes = (p.notes||[]).filter(n=>n.from==='admin');
+  if(!notes.length) return '<div class="pq-empty">暂无客服留言</div>';
+  return '<div class="msg-list">'+notes.map(n=>{
+    return '<div class="msg-item mine"><div class="msg-bubble">'+esc(n.text)+'</div><div class="msg-meta">客服 · '+esc(n.time)+'</div></div>';
   }).join('')+'</div>';
 }
 function pkgQuoteHTML(p){
@@ -3241,12 +3279,14 @@ function pkgDetailBody(p){
   const noteBox = (p.status!=='closed' && p.status!=='done')
     ? '<div class="od-section"><label>回复留言</label><div class="field" style="margin-bottom:0"><textarea id="pkg-note-input" placeholder="输入给客户的留言…" style="min-height:64px"></textarea></div></div>'
     : '';
+  const rejectNote = p.clientRejected ? '<div class="od-section"><label>报价反馈</label><div class="od-change" style="background:var(--amber-soft);border-color:rgba(232,162,60,.4)"><b style="color:var(--amber)">用户已拒绝报价</b><p>客户已拒绝本次报价'+(p.clientRejectTime?'（'+esc(p.clientRejectTime)+'）':'')+'，可修改报价后重新发送，客户可再次选择接受或拒绝。</p></div></div>' : '';
   return pkgStatusHead(p)+pkgStepsHTML(p)+
     '<div class="od-section"><label>询价信息</label><div class="od-grid">'+
       '<div class="od-item full"><label>询价单号</label><span class="mono">'+esc(p.id)+'</span></div>'+
       info.map(r=>'<div class="od-item"><label>'+r[0]+'</label><span>'+esc(r[1])+'</span></div>').join('')+noteRow+
     '</div></div>'+
     '<div class="od-section"><label>留言记录</label>'+pkgNotesHTML(p)+'</div>'+noteBox+
+    rejectNote+
     '<div class="od-section"><label>报价内容</label>'+pkgQuoteHTML(p)+'</div>';
 }
 function pkgDetailFoot(p){
@@ -3258,12 +3298,6 @@ function pkgDetailFoot(p){
   }
   if(canQuote){
     btns.push('<button class="btn btn-primary" onclick="openQuoteForm(\''+p.id+'\')">'+(p.quote?'修改报价':'录入报价')+'</button>');
-  }
-  if(p.status==='quoted'){
-    btns.push('<button class="btn btn-primary" onclick="pkgConfirm(\''+p.id+'\')">客户已确认</button>');
-  }
-  if(p.status==='confirmed'){
-    btns.push('<button class="btn btn-primary" onclick="pkgFulfill(\''+p.id+'\')">推进履约</button>');
   }
   if(p.status==='fulfilling'){
     btns.push('<button class="btn btn-primary" onclick="pkgDone(\''+p.id+'\')">履约完成</button>');
@@ -3287,18 +3321,6 @@ function pkgFollow(id){
   const p = pkgs.find(x=>x.id===id); if(!p) return;
   p.status = 'following';
   toast2('已受理，询价单进入跟进中');
-  closeDrawer(); renderPage('package');
-}
-function pkgConfirm(id){
-  const p = pkgs.find(x=>x.id===id); if(!p) return;
-  p.status = 'confirmed';
-  toast2('客户已确认报价，进入履约阶段');
-  closeDrawer(); renderPage('package');
-}
-function pkgFulfill(id){
-  const p = pkgs.find(x=>x.id===id); if(!p) return;
-  p.status = 'fulfilling';
-  toast2('已推进履约');
   closeDrawer(); renderPage('package');
 }
 function pkgDone(id){
@@ -3390,6 +3412,8 @@ function saveQuote(id){
   const sum = items.reduce((s,it)=>s+(parseFloat(String(it.v).replace(/[^\d.]/g,''))||0),0);
   const remark = document.getElementById('quote-remark').value.trim();
   p.quote = { total:'¥'+sum.toLocaleString(), items, remark };
+  p.clientRejected = false;
+  p.clientRejectTime = '';
   if(p.status==='following') p.status='quoted';
   toast2('报价已保存'+(p.status==='quoted'?'，询价单进入已报价':''));
   closeDrawer(); renderPage('package');
@@ -3399,8 +3423,8 @@ function saveQuote(id){
 PAGE.package = function(){
   const total = pkgs.length;
   const pending = pkgs.filter(p=>p.status==='pending').length;
-  const ongoing = pkgs.filter(p=>['following','quoted','confirmed','fulfilling'].includes(p.status)).length;
-  const converted = pkgs.filter(p=>['confirmed','fulfilling','done'].includes(p.status)).length;
+  const ongoing = pkgs.filter(p=>['following','quoted','fulfilling'].includes(p.status)).length;
+  const converted = pkgs.filter(p=>['fulfilling','done'].includes(p.status)).length;
   const rate = total ? Math.round(converted/total*100) : 0;
   const list = pkgList();
   const rows = list.map(pkgRow).join('');
@@ -3414,8 +3438,8 @@ PAGE.package = function(){
   '<div class="kpi-grid">'+
     '<div class="kpi reveal" style="animation-delay:.03s"><div class="k-top"><span class="k-label">询价单总数</span><span class="k-ico" style="background:var(--cyan-soft);color:var(--cyan)">▣</span></div><div class="k-value">'+total+'<small>单</small></div><div class="k-sub">全渠道包场询价</div></div>'+
     '<div class="kpi reveal" style="animation-delay:.06s"><div class="k-top"><span class="k-label">待处理</span><span class="k-ico" style="background:var(--amber-soft);color:var(--amber)">⏳</span></div><div class="k-value">'+pending+'<small>单</small></div><div class="k-sub">等待客服受理</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.09s"><div class="k-top"><span class="k-label">跟进中</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">☎</span></div><div class="k-value">'+ongoing+'<small>单</small></div><div class="k-sub">跟进 / 报价 / 确认 / 履约</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.12s"><div class="k-top"><span class="k-label">转化率</span><span class="k-ico" style="background:var(--gold-soft);color:var(--gold)">%</span></div><div class="k-value">'+rate+'<small>%</small></div><div class="k-sub">已确认 '+converted+' 单</div></div>'+
+    '<div class="kpi reveal" style="animation-delay:.09s"><div class="k-top"><span class="k-label">跟进中</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">☎</span></div><div class="k-value">'+ongoing+'<small>单</small></div><div class="k-sub">跟进 / 报价 / 履约</div></div>'+
+    '<div class="kpi reveal" style="animation-delay:.12s"><div class="k-top"><span class="k-label">转化率</span><span class="k-ico" style="background:var(--gold-soft);color:var(--gold)">%</span></div><div class="k-value">'+rate+'<small>%</small></div><div class="k-sub">已转化 '+converted+' 单</div></div>'+
   '</div>'+
 
   '<div class="toolbar reveal" style="animation-delay:.08s">'+
@@ -4809,33 +4833,33 @@ const WITHDRAW_STATUS = {
 };
 
 const DISTRIBUTOR_SEED = [
-  { id:'FX20260801001', name:'林间品牌咨询有限公司', phone:'138****2088', inviteCode:'YX2026-0831', identity:'企业', status:'approved', bind:3, orders:12, gmv:108000, settled:1792, available:1280, pending:620, applyAt:'2026/08/01 10:20' },
-  { id:'FX20260815002', name:'星汉文化传媒有限公司', phone:'139****6612', inviteCode:'YX2026-1508', identity:'企业', status:'approved', bind:2, orders:7, gmv:52100, settled:1024, available:960, pending:210, applyAt:'2026/08/15 14:05' },
-  { id:'FX20260822003', name:'刘一鸣', phone:'136****5521', inviteCode:'YX2026-2208', identity:'个人', status:'approved', bind:1, orders:3, gmv:15600, settled:320, available:180, pending:0, applyAt:'2026/08/22 09:12' },
-  { id:'FX20260901004', name:'王强', phone:'137****3309', inviteCode:'', identity:'个人', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/01 16:40' },
-  { id:'FX20260910005', name:'湖南鼎信广告有限公司', phone:'137****3309', inviteCode:'', identity:'企业', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/10 11:30' },
-  { id:'FX20260918006', name:'长沙云图设计有限公司', phone:'134****9982', inviteCode:'YX2026-1809', identity:'企业', status:'frozen', bind:1, orders:2, gmv:8600, settled:0, available:0, pending:96, applyAt:'2026/09/02 10:00', freezeReason:'疑似刷单 · 关联账号异常' },
+  { id:'FX20260801001', name:'林知远', phone:'138****2088', inviteCode:'YX2026-0831', status:'approved', bind:3, orders:12, gmv:108000, settled:1792, available:1280, pending:620, applyAt:'2026/08/01 10:20', applyNote:'长期从事品牌营销工作，希望推广影院映前广告资源。' },
+  { id:'FX20260815002', name:'陈启明', phone:'139****6612', inviteCode:'YX2026-1508', status:'approved', bind:2, orders:7, gmv:52100, settled:1024, available:960, pending:210, applyAt:'2026/08/15 14:05', applyNote:'主营传媒业务，有稳定客户资源，申请开通分销资格。' },
+  { id:'FX20260822003', name:'刘一鸣', phone:'136****5521', inviteCode:'YX2026-2208', status:'approved', bind:1, orders:3, gmv:15600, settled:320, available:180, pending:0, applyAt:'2026/08/22 09:12', applyNote:'有本地商户资源，希望合作推广映前广告。' },
+  { id:'FX20260901004', name:'王强', phone:'137****3309', inviteCode:'', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/01 16:40', applyNote:'希望通过分享推广赚取佣金，请审核开通。' },
+  { id:'FX20260910005', name:'王若琳', phone:'137****3309', inviteCode:'', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/10 11:30', applyNote:'广告公司从业者，客户以本地品牌为主。' },
+  { id:'FX20260918006', name:'孙浩', phone:'134****9982', inviteCode:'YX2026-1809', status:'frozen', bind:1, orders:2, gmv:8600, settled:0, available:0, pending:96, applyAt:'2026/09/02 10:00', applyNote:'曾服务多个连锁品牌，希望对接影院广告资源。', freezeReason:'疑似刷单 · 关联账号异常' },
 ];
 const LEDGER_SEED = [
-  { id:'FX20260829001', dist:'林间品牌咨询有限公司', customer:'苏州拾光文化传播', product:'万达影城（长沙开福店）· 映前广告', amount:12800, commission:1024, status:'settled', time:'2026/08/29 12:00' },
-  { id:'FX20260812002', dist:'林间品牌咨询有限公司', customer:'长沙云图设计', product:'CGV影城（长沙岳麓店）· 映前广告', amount:9600, commission:768, status:'settled', time:'2026/08/12 10:30' },
-  { id:'FX20260905003', dist:'星汉文化传媒有限公司', customer:'苏州拾光文化传播', product:'横店影视城（长沙雨花店）· 映前广告', amount:9000, commission:720, status:'available', time:'2026/09/05 15:20' },
-  { id:'FX20260915004', dist:'林间品牌咨询有限公司', customer:'苏州拾光文化传播', product:'万达影城（长沙梅溪湖店）· 映前广告', amount:6200, commission:496, status:'pending', time:'2026/09/15 16:40' },
-  { id:'FX20260918005', dist:'林间品牌咨询有限公司', customer:'苏州拾光文化传播', product:'中影国际影城（长沙芙蓉店）· 映前广告', amount:3600, commission:288, status:'frozen', time:'2026/09/18 09:30' },
+  { id:'FX20260829001', dist:'林知远', customer:'苏州拾光文化传播', product:'万达影城（长沙开福店）· 映前广告', amount:12800, commission:1024, status:'settled', time:'2026/08/29 12:00' },
+  { id:'FX20260812002', dist:'林知远', customer:'长沙云图设计', product:'CGV影城（长沙岳麓店）· 映前广告', amount:9600, commission:768, status:'settled', time:'2026/08/12 10:30' },
+  { id:'FX20260905003', dist:'陈启明', customer:'苏州拾光文化传播', product:'横店影视城（长沙雨花店）· 映前广告', amount:9000, commission:720, status:'available', time:'2026/09/05 15:20' },
+  { id:'FX20260915004', dist:'林知远', customer:'苏州拾光文化传播', product:'万达影城（长沙梅溪湖店）· 映前广告', amount:6200, commission:496, status:'pending', time:'2026/09/15 16:40' },
+  { id:'FX20260918005', dist:'林知远', customer:'苏州拾光文化传播', product:'中影国际影城（长沙芙蓉店）· 映前广告', amount:3600, commission:288, status:'frozen', time:'2026/09/18 09:30' },
   { id:'FX20260921006', dist:'刘一鸣', customer:'长沙云图设计', product:'博纳国际影城（长沙天心店）· 映前广告', amount:2200, commission:176, status:'available', time:'2026/09/21 14:00' },
 ];
 const WITHDRAW_SEED = [
-  { id:'TX20260922001', dist:'林间品牌咨询有限公司', account:'招商银行 · 尾号 8832', amount:1280, applyAt:'2026/09/22 15:40', status:'pending' },
-  { id:'TX20260920002', dist:'星汉文化传媒有限公司', account:'建设银行 · 尾号 6612', amount:960, applyAt:'2026/09/20 11:08', status:'pending' },
+  { id:'TX20260922001', dist:'林知远', account:'招商银行 · 尾号 8832', amount:1280, applyAt:'2026/09/22 15:40', status:'pending' },
+  { id:'TX20260920002', dist:'陈启明', account:'建设银行 · 尾号 6612', amount:960, applyAt:'2026/09/20 11:08', status:'pending' },
   { id:'TX20260915003', dist:'刘一鸣', account:'微信支付 · 尾号 5521', amount:180, applyAt:'2026/09/15 09:20', status:'approved', approveAt:'2026/09/15 18:30' },
-  { id:'TX20260828004', dist:'林间品牌咨询有限公司', account:'招商银行 · 尾号 8832', amount:1024, applyAt:'2026/08/28 10:00', status:'approved', approveAt:'2026/08/28 17:00' },
-  { id:'TX20260918005', dist:'长沙云图设计有限公司', account:'微信支付 · 尾号 9982', amount:200, applyAt:'2026/09/18 13:00', status:'rejected', rejectReason:'账户信息不完整，请完善后重新提交' },
+  { id:'TX20260828004', dist:'林知远', account:'招商银行 · 尾号 8832', amount:1024, applyAt:'2026/08/28 10:00', status:'approved', approveAt:'2026/08/28 17:00' },
+  { id:'TX20260918005', dist:'孙浩', account:'微信支付 · 尾号 9982', amount:200, applyAt:'2026/09/18 13:00', status:'rejected', rejectReason:'账户信息不完整，请完善后重新提交' },
 ];
 
 let distributors = JSON.parse(JSON.stringify(DISTRIBUTOR_SEED));
 let ledger = JSON.parse(JSON.stringify(LEDGER_SEED));
 let withdraws = JSON.parse(JSON.stringify(WITHDRAW_SEED));
-let distRule = { ratio:8, threshold:100, settleNote:'推广订单支付成功且未退款后，按订单实付金额 × 比例自动计入可提现佣金。' };
+let distRule = { ratio:8, threshold:100, withdrawTimes:3, arriveCycle:'1–3 个工作日', withdrawNote:'提交后由财务审核打款', settleNote:'推广订单支付成功且未退款后，按订单实付金额 × 比例自动计入可提现佣金。' };
 
 let distTab = 'list';
 let distFilter = { q:'', status:'all' };
@@ -4869,7 +4893,8 @@ function distRow(d){
           : '')+
   '</div>';
   return '<tr>'+
-    '<td><div class="dist-cell"><div class="dist-ava">'+esc(d.name[0])+'</div><div><b>'+esc(d.name)+'</b><span class="sub">'+esc(d.phone)+' · '+esc(d.identity)+'身份</span></div></div></td>'+
+    '<td><div class="dist-cell"><div class="dist-ava">'+esc(d.name[0])+'</div><div><b>'+esc(d.name)+'</b><span class="sub">'+esc(d.phone)+' · 个人身份</span></div></div></td>'+
+    '<td class="muted" style="max-width:220px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(d.applyNote||'—')+'">'+esc(d.applyNote||'—')+'</div></td>'+
     '<td class="mono">'+(d.inviteCode||'<span class="muted">—</span>')+'</td>'+
     '<td class="mono">'+d.bind+'</td>'+
     '<td class="mono">'+d.orders+'</td>'+
@@ -4889,7 +4914,7 @@ function distListTab(){
     return true;
   });
   const rows = list.map(distRow).join('');
-  const empty = list.length ? '' : '<tr><td colspan="8" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的分销员</td></tr>';
+  const empty = list.length ? '' : '<tr><td colspan="9" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的分销员</td></tr>';
   return '<div class="toolbar reveal" style="animation-delay:.06s">'+
     '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="dist-q" placeholder="搜索姓名 / 手机号 / 编号 / 邀请码…" value="'+esc(distFilter.q)+'" oninput="setDistQ(this.value)"></div>'+
     '<div class="chips">'+distStatusChips()+'</div>'+
@@ -4897,7 +4922,7 @@ function distListTab(){
   '<div class="panel reveal" style="animation-delay:.1s">'+
     '<div class="panel-head"><h3>分销员列表</h3><span class="count">共 '+list.length+' 人</span></div>'+
     '<div class="table-wrap"><table>'+
-      '<thead><tr><th>分销员</th><th>邀请码</th><th>绑定客户</th><th>推广订单</th><th>累计成交</th><th>可提现佣金</th><th>状态</th><th>操作</th></tr></thead>'+
+      '<thead><tr><th>分销员</th><th>申请说明</th><th>邀请码</th><th>绑定客户</th><th>推广订单</th><th>累计成交</th><th>可提现佣金</th><th>状态</th><th>操作</th></tr></thead>'+
       '<tbody>'+rows+empty+'</tbody>'+
     '</table></div>'+
   '</div>';
@@ -4906,12 +4931,13 @@ function distListTab(){
 function openDistributor(id){
   const d = distributors.find(x=>x.id===id); if(!d) return;
   const st = DISTRIBUTOR_STATUS[d.status];
-  const head = '<div class="od-status ic-'+(d.status==='approved'?'confirmed':d.status==='frozen'?'cancel':d.status==='pending'?'pending':'closed')+'"><div class="od-status-ico">'+(d.identity==='企业'?'▣':'◌')+'</div><div class="od-status-copy"><b>'+esc(d.name)+'</b><span>'+esc(d.phone)+' · '+esc(d.identity)+'分销员</span></div></div>';
+  const head = '<div class="od-status ic-'+(d.status==='approved'?'confirmed':d.status==='frozen'?'cancel':d.status==='pending'?'pending':'closed')+'"><div class="od-status-ico">◌</div><div class="od-status-copy"><b>'+esc(d.name)+'</b><span>'+esc(d.phone)+' · 个人身份分销员</span></div></div>';
   const base = '<div class="od-section"><label>基本信息</label><div class="od-grid">'+
     '<div class="od-item"><label>分销员编号</label><span class="mono">'+esc(d.id)+'</span></div>'+
     '<div class="od-item"><label>邀请码</label><span class="mono">'+(d.inviteCode||'—')+'</span></div>'+
     '<div class="od-item"><label>申请时间</label><span>'+esc(d.applyAt)+'</span></div>'+
     '<div class="od-item"><label>状态</label><span class="pill '+st.cls+'">'+st.label+'</span></div>'+
+    '<div class="od-item full"><label>申请说明</label><span>'+(d.applyNote?esc(d.applyNote):'<span class="muted">—</span>')+'</span></div>'+
   '</div></div>';
   const freeze = d.freezeReason ? '<div class="od-section"><label>冻结原因</label><div class="od-change" style="background:var(--red-soft);border-color:rgba(238,111,101,.4)"><b style="color:var(--red)">账户已冻结</b><p>'+esc(d.freezeReason)+'</p></div></div>' : '';
   const reject = d.rejectReason ? '<div class="od-section"><label>驳回原因</label><div class="od-change" style="background:var(--amber-soft);border-color:rgba(232,162,60,.4)"><b style="color:var(--amber)">申请已驳回</b><p>'+esc(d.rejectReason)+'</p></div></div>' : '';
@@ -4983,40 +5009,58 @@ function ruleCards(){
     '<div class="rule-item"><span class="ri-k">结算说明</span><span class="ri-v" style="font-family:var(--sans);font-weight:400;color:var(--muted);font-size:12px;max-width:60%">'+esc(r.settleNote)+'</span></div>'+
   '</div>'+
   '<div class="rule-card">'+
-    '<div class="rc-h">¥ 提现门槛</div><div class="rc-sub">最低可提现金额</div>'+
+    '<div class="rc-h">¥ 提现规则</div><div class="rc-sub">提现门槛与到账规则</div>'+
     '<div class="rule-item"><span class="ri-k">最低提现</span><span class="ri-v">¥ '+r.threshold+'</span></div>'+
-    '<div class="rule-item"><span class="ri-k">到账周期</span><span class="ri-v">1–3 个工作日</span></div>'+
-    '<div class="rule-item"><span class="ri-k">提现说明</span><span class="ri-v" style="font-family:var(--sans);font-weight:400;color:var(--muted);font-size:12px;max-width:60%">提交后由财务审核打款</span></div>'+
+    '<div class="rule-item"><span class="ri-k">提现次数</span><span class="ri-v">'+r.withdrawTimes+' 次/天</span></div>'+
+    '<div class="rule-item"><span class="ri-k">到账周期</span><span class="ri-v">'+esc(r.arriveCycle)+'</span></div>'+
+    '<div class="rule-item"><span class="ri-k">提现说明</span><span class="ri-v" style="font-family:var(--sans);font-weight:400;color:var(--muted);font-size:12px;max-width:60%">'+esc(r.withdrawNote)+'</span></div>'+
   '</div>';
 }
 function distRuleTab(){
   return '<div class="panel reveal" style="animation-delay:.06s"><div class="panel-head"><h3>提成规则配置</h3><span class="count">比例计提模式</span><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="editDistRule()">编辑规则</button></div>'+
     '<div style="padding:18px"><div class="dist-grid">'+ruleCards()+'</div></div></div>';
 }
+const DIST_ARRIVE_CYCLES = ['1–3 个工作日','3–5 个工作日','1–7 个工作日','7–15 个工作日'];
 function editDistRule(){
-  openInputDialog({
-    title:'编辑提成规则', ico:'⚙', icoStyle:'background:var(--cyan-soft);color:var(--cyan)',
-    label:'佣金比例（%）', required:true, type:'number', placeholder:'请输入佣金比例', value:distRule.ratio,
-    hint:'范围 0–100',
-    confirmLabel:'下一步',
-    onConfirm:function(val){
-      const r = parseFloat(val);
-      if(!r || r<0 || r>100){ toast2('比例需在 0–100 之间'); return; }
-      distRule.ratio = r;
-      closeDialog();
-      openInputDialog({
-        title:'编辑提成规则', ico:'⚙', icoStyle:'background:var(--cyan-soft);color:var(--cyan)',
-        label:'最低提现金额（元）', required:true, type:'number', placeholder:'请输入最低提现金额', value:distRule.threshold,
-        confirmLabel:'保存',
-        onConfirm:function(val2){
-          distRule.threshold = Math.max(0, +val2 || 0);
-          closeDialog();
-          toast2('提成规则已更新');
-          renderPage('distribution');
-        }
-      });
-    }
-  });
+  const r = distRule;
+  const cycleOpts = DIST_ARRIVE_CYCLES.map(c=>'<option value="'+esc(c)+'"'+(r.arriveCycle===c?' selected':'')+'>'+esc(c)+'</option>').join('');
+  const body = ''+
+    '<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px">计提规则</div>'+
+    '<div class="field-row">'+
+      '<div class="field"><label>佣金比例（%）<b>*</b></label><input id="dr-ratio" type="number" min="0" max="100" value="'+r.ratio+'"><div class="field-hint">范围 0–100，按订单实付金额计提</div></div>'+
+      '<div class="field" style="display:flex;flex-direction:column"><label>计提模式</label><input value="按实付金额比例" disabled></div>'+
+    '</div>'+
+    '<div class="field"><label>结算说明</label><textarea id="dr-settle" style="min-height:64px">'+esc(r.settleNote)+'</textarea></div>'+
+    '<div style="font-size:12px;font-weight:700;color:var(--muted);margin:6px 0 10px">提现规则</div>'+
+    '<div class="field-row">'+
+      '<div class="field"><label>最低提现金额（元）<b>*</b></label><input id="dr-threshold" type="number" min="0" value="'+r.threshold+'"></div>'+
+      '<div class="field"><label>提现次数（次/天）<b>*</b></label><input id="dr-times" type="number" min="1" value="'+r.withdrawTimes+'"></div>'+
+    '</div>'+
+    '<div class="field-row">'+
+      '<div class="field"><label>到账周期</label><select id="dr-cycle">'+cycleOpts+'</select></div>'+
+      '<div class="field"></div>'+
+    '</div>'+
+    '<div class="field" style="margin-bottom:0"><label>提现说明</label><textarea id="dr-note" style="min-height:64px">'+esc(r.withdrawNote)+'</textarea></div>';
+  openCaseModal('编辑提成规则', body,
+    '<button class="btn btn-ghost" onclick="closeCaseModal()">取消</button>'+
+    '<button class="btn btn-primary" onclick="saveDistRule()">保存</button>',
+    '520px');
+}
+function saveDistRule(){
+  const g = id => document.getElementById(id);
+  const ratio = parseFloat(g('dr-ratio').value);
+  if(isNaN(ratio) || ratio<0 || ratio>100){ toast2('佣金比例需在 0–100 之间'); return; }
+  const threshold = Math.max(0, +g('dr-threshold').value || 0);
+  const times = Math.max(1, Math.floor(+g('dr-times').value || 1));
+  distRule.ratio = ratio;
+  distRule.threshold = threshold;
+  distRule.withdrawTimes = times;
+  distRule.arriveCycle = g('dr-cycle').value;
+  distRule.settleNote = g('dr-settle').value.trim() || distRule.settleNote;
+  distRule.withdrawNote = g('dr-note').value.trim() || distRule.withdrawNote;
+  closeCaseModal();
+  toast2('提成 / 提现规则已更新');
+  renderPage('distribution');
 }
 
 /* 提成台账 */
@@ -5201,15 +5245,10 @@ renderPage('distribution');
 
 <script>
 /* =====================================================
-   模块：返本与退款
-   权益台账、到期返还审核、退款、提现审核、对账
-   字段与小程序钱包 / 权益返还对应
+   模块：提现与退款
+   退款、钱包提现审核、资金对账
+   字段与小程序钱包 / 退款提现对应
 ===================================================== */
-const EQUITY_STATUS = {
-  locked:   { label:'锁定中', cls:'amber' },
-  ready:    { label:'待返还', cls:'cyan' },
-  returned: { label:'已返还', cls:'green' },
-};
 const REFUND_STATUS = {
   pending:  { label:'待审核', cls:'amber' },
   approved: { label:'已退款', cls:'green' },
@@ -5221,14 +5260,6 @@ const WALLET_WD_STATUS = {
   rejected: { label:'已驳回', cls:'gray' },
 };
 
-const EQUITY_SEED = [
-  { id:'YK20260921016', customer:'林间品牌咨询有限公司', cinema:'万达影城（长沙开福店）', principal:25200, due:'2026/10/28', status:'locked', orderTime:'2026/09/21 10:12' },
-  { id:'YK20260905011', customer:'林间品牌咨询有限公司', cinema:'横店影视城（长沙雨花店）', principal:18000, due:'2026/09/30', status:'ready', orderTime:'2026/09/05 14:30' },
-  { id:'YK20260913015', customer:'林间品牌咨询有限公司', cinema:'万达影城（长沙梅溪湖店）', principal:22400, due:'2026/11/06', status:'locked', orderTime:'2026/09/13 10:30' },
-  { id:'YK20260918007', customer:'刘一鸣', cinema:'中影国际影城（长沙芙蓉店）', principal:19200, due:'2026/10/11', status:'ready', orderTime:'2026/09/18 09:40' },
-  { id:'YK20260821002', customer:'星汉文化传媒有限公司', cinema:'金逸影城（广州天河店）', principal:9600, due:'2026/08/28', status:'returned', orderTime:'2026/08/21 10:00', returnTime:'2026/08/28 09:15' },
-  { id:'YK20260911003', customer:'长沙云图设计有限公司', cinema:'横店影视城（长沙雨花店）', principal:15600, due:'2026/10/05', status:'locked', orderTime:'2026/09/11 11:20' },
-];
 const REFUND_SEED = [
   { id:'TK20260921001', orderId:'YK20260920012', customer:'星汉文化传媒有限公司', cinema:'CGV影城（长沙岳麓店）', amount:4800, payMode:'折扣支付 9折', reason:'排期冲突，申请取消订单', commission:0, applyAt:'2026/09/21 15:00', status:'pending' },
   { id:'TK20260919002', orderId:'YK20260918007', customer:'刘一鸣', cinema:'中影国际影城（长沙芙蓉店）', amount:19200, payMode:'原价支付', reason:'影院档期临时调整', commission:0, applyAt:'2026/09/19 17:20', status:'pending' },
@@ -5244,7 +5275,6 @@ const WALLET_WD_SEED = [
 ];
 const FLOW_SEED = [
   { id:'LS20260921001', dir:'in',  type:'订单收款',  party:'林间品牌咨询有限公司', subject:'万达影城（长沙开福店）', amount:25200, time:'2026/09/21 10:13', note:'原价支付 · YK20260921016' },
-  { id:'LS20260920002', dir:'out', type:'返本出账',  party:'林间品牌咨询有限公司', subject:'横店影视城（长沙雨花店）', amount:18000, time:'2026/09/20 10:02', note:'权益本金返还' },
   { id:'LS20260918003', dir:'out', type:'退款出账',  party:'星汉文化传媒有限公司', subject:'CGV影城（长沙岳麓店）', amount:4800, time:'2026/09/18 16:30', note:'订单退款' },
   { id:'LS20260916004', dir:'in',  type:'订单收款',  party:'湖南鼎信广告有限公司', subject:'潇湘国际影城（长沙溁湾镇店）', amount:9600, time:'2026/09/16 15:00', note:'折扣支付 8.5折' },
   { id:'LS20260915005', dir:'out', type:'提现打款',  party:'星汉文化传媒有限公司', subject:'—', amount:9600, time:'2026/09/15 18:00', note:'钱包余额提现' },
@@ -5253,99 +5283,22 @@ const FLOW_SEED = [
   { id:'LS20260912008', dir:'out', type:'退款出账',  party:'长沙云图设计有限公司', subject:'横店影视城（长沙雨花店）', amount:1248, time:'2026/09/12 16:30', note:'重复下单退款' },
   { id:'LS20260911009', dir:'in',  type:'订单收款',  party:'长沙云图设计有限公司', subject:'横店影视城（长沙雨花店）', amount:15600, time:'2026/09/11 11:22', note:'原价支付' },
   { id:'LS20260902010', dir:'out', type:'提现打款',  party:'林间品牌咨询有限公司', subject:'—', amount:12000, time:'2026/09/02 16:20', note:'钱包余额提现' },
-  { id:'LS20260828011', dir:'out', type:'返本出账',  party:'星汉文化传媒有限公司', subject:'金逸影城（广州天河店）', amount:9600, time:'2026/08/28 09:15', note:'权益本金返还' },
 ];
 
-let equities = JSON.parse(JSON.stringify(EQUITY_SEED));
 let refunds = JSON.parse(JSON.stringify(REFUND_SEED));
 let wWithdraws = JSON.parse(JSON.stringify(WALLET_WD_SEED));
 let flows = JSON.parse(JSON.stringify(FLOW_SEED));
 
-let rbTab = 'equity';
-let equityFilter = { q:'', status:'all' };
+let rbTab = 'refund';
 let refundFilter = { status:'all' };
 let wdFilter = { status:'all' };
 let flowFilter = { dir:'all', type:'all' };
 
 function setRbTab(k){ rbTab = k; renderPage('refund'); }
-function setEquityQ(v){ equityFilter.q = v.trim(); renderPage('refund'); }
-function setEquityStatus(v){ equityFilter.status = v; renderPage('refund'); }
 function setRefundStatus(v){ refundFilter.status = v; renderPage('refund'); }
 function setWdStatus(v){ wdFilter.status = v; renderPage('refund'); }
 function setFlowDir(v){ flowFilter.dir = v; renderPage('refund'); }
 function setFlowType(v){ flowFilter.type = v; renderPage('refund'); }
-
-/* 权益台账 */
-function equityStatusChips(){
-  const opts = [{k:'all',label:'全部状态'}].concat(Object.keys(EQUITY_STATUS).map(k=>({k,label:EQUITY_STATUS[k].label})));
-  return opts.map(x=>'<button type="button" class="chip'+(equityFilter.status===x.k?' active':'')+'" onclick="setEquityStatus(\''+x.k+'\')">'+x.label+'</button>').join('');
-}
-function equityRow(e){
-  const st = EQUITY_STATUS[e.status];
-  return '<tr>'+
-    '<td class="mono">'+esc(e.id)+'</td>'+
-    '<td>'+esc(e.customer)+'</td>'+
-    '<td class="muted">'+esc(e.cinema)+'</td>'+
-    '<td class="mono" style="white-space:nowrap"><span style="color:var(--gold)">¥'+e.principal.toLocaleString()+'</span></td>'+
-    '<td class="mono" style="white-space:nowrap">'+esc(e.due)+'</td>'+
-    '<td><span class="pill '+st.cls+'">'+st.label+'</span></td>'+
-    '<td class="muted" style="white-space:nowrap">'+esc(e.orderTime)+(e.returnTime?'<span class="cell-sub">返还于 '+esc(e.returnTime)+'</span>':'')+'</td>'+
-  '</tr>';
-}
-function equityTab(){
-  const list = equities.filter(e=>{
-    if(equityFilter.status!=='all' && e.status!==equityFilter.status) return false;
-    if(equityFilter.q){
-      const hay=(e.id+e.customer+e.cinema).toLowerCase();
-      if(!hay.includes(equityFilter.q.toLowerCase())) return false;
-    }
-    return true;
-  });
-  const rows = list.map(equityRow).join('');
-  const empty = list.length ? '' : '<tr><td colspan="7" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的权益记录</td></tr>';
-  return '<div class="toolbar reveal" style="animation-delay:.06s">'+
-    '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="equity-q" placeholder="搜索订单号 / 客户 / 影院…" value="'+esc(equityFilter.q)+'" oninput="setEquityQ(this.value)"></div>'+
-    '<div class="chips">'+equityStatusChips()+'</div>'+
-  '</div>'+
-  '<div class="panel reveal" style="animation-delay:.1s">'+
-    '<div class="panel-head"><h3>权益台账</h3><span class="count">共 '+list.length+' 笔 · 原价支付</span></div>'+
-    '<div class="table-wrap"><table>'+
-      '<thead><tr><th>订单号</th><th>客户</th><th>影院</th><th>本金</th><th>到期日</th><th>状态</th><th>下单时间</th></tr></thead>'+
-      '<tbody>'+rows+empty+'</tbody>'+
-    '</table></div>'+
-  '</div>';
-}
-
-/* 到期返还审核 */
-function returnTab(){
-  const list = equities.filter(e=>e.status==='ready');
-  const rows = list.map(e=>{
-    return '<tr>'+
-      '<td class="mono">'+esc(e.id)+'</td>'+
-      '<td>'+esc(e.customer)+'</td>'+
-      '<td class="muted">'+esc(e.cinema)+'</td>'+
-      '<td class="mono" style="white-space:nowrap"><span style="color:var(--gold)">¥'+e.principal.toLocaleString()+'</span></td>'+
-      '<td class="mono" style="white-space:nowrap">'+esc(e.due)+'</td>'+
-      '<td class="muted" style="white-space:nowrap">'+esc(e.orderTime)+'</td>'+
-      '<td style="white-space:nowrap"><button class="btn btn-primary btn-sm" onclick="confirmReturn(\''+e.id+'\')">确认返还</button></td>'+
-    '</tr>';
-  }).join('');
-  const empty = list.length ? '' : '<tr><td colspan="7" style="text-align:center;padding:44px;color:var(--faint)">暂无待返还的权益</td></tr>';
-  return '<div class="panel reveal" style="animation-delay:.06s">'+
-    '<div class="panel-head"><h3>到期返还审核</h3><span class="count">共 '+list.length+' 笔待返还</span></div>'+
-    '<div class="table-wrap"><table>'+
-      '<thead><tr><th>订单号</th><th>客户</th><th>影院</th><th>本金</th><th>到期日</th><th>下单时间</th><th>操作</th></tr></thead>'+
-      '<tbody>'+rows+empty+'</tbody>'+
-    '</table></div>'+
-  '</div>';
-}
-function confirmReturn(id){
-  const e = equities.find(x=>x.id===id); if(!e) return;
-  e.status = 'returned';
-  e.returnTime = nowStamp();
-  toast2('已返还本金 ¥'+e.principal.toLocaleString()+' 至企业钱包');
-  renderPage('refund');
-}
 
 /* 退款 */
 function refundStatusChips(){
@@ -5477,7 +5430,7 @@ function flowDirChips(){
   return opts.map(x=>'<button type="button" class="chip'+(flowFilter.dir===x.k?' active':'')+'" onclick="setFlowDir(\''+x.k+'\')">'+x.label+'</button>').join('');
 }
 function flowTypeChips(){
-  const types = ['订单收款','返本出账','退款出账','提现打款'];
+  const types = ['订单收款','退款出账','提现打款'];
   const opts = [{k:'all',label:'全部类型'}].concat(types.map(t=>({k:t,label:t})));
   return opts.map(x=>'<button type="button" class="chip'+(flowFilter.type===x.k?' active':'')+'" onclick="setFlowType(\''+x.k+'\')">'+x.label+'</button>').join('');
 }
@@ -5509,7 +5462,7 @@ function reconcileTab(){
 
   const summary = '<div class="flow-grid">'+
     '<div class="fund-card"><label>累计收入</label><div class="fv" style="color:var(--green)">¥'+income.toLocaleString()+'</div><div class="fs">订单收款</div></div>'+
-    '<div class="fund-card"><label>累计支出</label><div class="fv" style="color:var(--red)">¥'+expense.toLocaleString()+'</div><div class="fs">返本 · 退款 · 提现</div></div>'+
+    '<div class="fund-card"><label>累计支出</label><div class="fv" style="color:var(--red)">¥'+expense.toLocaleString()+'</div><div class="fs">退款 · 提现</div></div>'+
     '<div class="fund-card"><label>净结余</label><div class="fv" style="color:var(--cyan)">¥'+balance.toLocaleString()+'</div><div class="fs">收入 − 支出</div></div>'+
   '</div>';
 
@@ -5529,50 +5482,38 @@ function reconcileTab(){
 
 /* 页面渲染 */
 PAGE.refund = function(){
-  const lockedSum = equities.filter(e=>e.status!=='returned').reduce((s,e)=>s+e.principal,0);
-  const readySum = equities.filter(e=>e.status==='ready').reduce((s,e)=>s+e.principal,0);
   const refundPending = refunds.filter(r=>r.status==='pending');
   const refundPendingAmt = refundPending.reduce((s,r)=>s+r.amount,0);
-  const wdPendingAmt = wWithdraws.filter(w=>w.status==='pending').reduce((s,w)=>s+w.amount,0);
+  const wdPending = wWithdraws.filter(w=>w.status==='pending');
+  const wdPendingAmt = wdPending.reduce((s,w)=>s+w.amount,0);
 
   const tabs = [
-    { k:'equity', label:'权益台账', ico:'▤' },
-    { k:'return', label:'到期返还审核', ico:'↩', n: equities.filter(e=>e.status==='ready').length },
     { k:'refund', label:'退款', ico:'↶', n: refundPending.length },
-    { k:'withdraw', label:'提现审核', ico:'¥', n: wWithdraws.filter(w=>w.status==='pending').length },
+    { k:'withdraw', label:'提现审核', ico:'¥', n: wdPending.length },
     { k:'reconcile', label:'对账', ico:'Σ' },
   ];
   const tabHTML = '<div class="pub-tabs">'+tabs.map(t=>'<button class="pub-tab'+(rbTab===t.k?' active':'')+'" onclick="setRbTab(\''+t.k+'\')">'+t.ico+' '+t.label+(t.n?'<span class="t-num">'+t.n+'</span>':'')+'</button>').join('')+'</div>';
 
   let body = '';
-  if(rbTab==='equity') body = equityTab();
-  else if(rbTab==='return') body = returnTab();
-  else if(rbTab==='refund') body = refundTab();
+  if(rbTab==='refund') body = refundTab();
   else if(rbTab==='withdraw') body = withdrawTab();
   else body = reconcileTab();
 
   return ''+
   '<div class="page-head reveal">'+
-    '<div class="page-title"><span class="eyebrow">财务中心</span>返本与退款</div>'+
-    '<p class="page-desc">管理原价支付订单的本金返还、退款与钱包提现审核，并对资金流水进行对账。</p>'+
+    '<div class="page-title"><span class="eyebrow">财务中心</span>提现与退款</div>'+
+    '<p class="page-desc">管理订单退款与钱包提现审核，并对资金流水进行对账。</p>'+
   '</div>'+
 
-  '<div class="kpi-grid">'+
-    '<div class="kpi reveal" style="animation-delay:.03s"><div class="k-top"><span class="k-label">待返本权益</span><span class="k-ico" style="background:var(--gold-soft);color:var(--gold)">¥</span></div><div class="k-value">'+lockedSum.toLocaleString()+'<small>元</small></div><div class="k-sub">锁定中 + 待返还本金</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.06s"><div class="k-top"><span class="k-label">待返还本金</span><span class="k-ico" style="background:var(--cyan-soft);color:var(--cyan)">↩</span></div><div class="k-value">'+readySum.toLocaleString()+'<small>元</small></div><div class="k-sub">已到期待审核</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.09s"><div class="k-top"><span class="k-label">待审核退款</span><span class="k-ico" style="background:var(--red-soft);color:var(--red)">↶</span></div><div class="k-value">'+refundPending.length+'<small>笔</small></div><div class="k-sub">¥'+refundPendingAmt.toLocaleString()+'</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.12s"><div class="k-top"><span class="k-label">待审核提现</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">¥</span></div><div class="k-value">'+wdPendingAmt.toLocaleString()+'<small>元</small></div><div class="k-sub">钱包余额提现</div></div>'+
+  '<div class="kpi-grid" style="grid-template-columns:repeat(2,1fr)">'+
+    '<div class="kpi reveal" style="animation-delay:.03s"><div class="k-top"><span class="k-label">待审核退款</span><span class="k-ico" style="background:var(--red-soft);color:var(--red)">↶</span></div><div class="k-value">'+refundPending.length+'<small>笔</small></div><div class="k-sub">¥'+refundPendingAmt.toLocaleString()+'</div></div>'+
+    '<div class="kpi reveal" style="animation-delay:.06s"><div class="k-top"><span class="k-label">待审核提现</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">¥</span></div><div class="k-value">'+wdPendingAmt.toLocaleString()+'<small>元</small></div><div class="k-sub">'+wdPending.length+' 笔钱包提现</div></div>'+
   '</div>'+
 
   tabHTML+body;
 };
 
-PAGE.after.refund = function(){
-  const q = document.getElementById('equity-q');
-  if(q){ q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
-};
-
-/* 当前设计模块初始化：返本与退款 */
+/* 当前设计模块初始化：提现与退款 */
 renderPage('refund');
 </script>
 
@@ -6208,7 +6149,7 @@ const PERM_GROUPS = [
   ]},
   { group:'客服中心', items:[ { id:'service', label:'在线客服', icon:'service' } ] },
   { group:'财务中心', items:[
-    { id:'refund', label:'返本与退款', icon:'wallet' },
+    { id:'refund', label:'提现与退款', icon:'wallet' },
     { id:'invoice', label:'发票管理', icon:'invoice' },
   ]},
   { group:'系统设置', items:[
@@ -6223,7 +6164,7 @@ const ALL_PERMS = PERM_GROUPS.flatMap(g=>g.items.map(i=>i.id));
 const ROLE_SEED = [
   { key:'super', name:'超级管理员', desc:'拥有全部功能与数据访问权限，可管理账号与角色', builtin:true, perms:ALL_PERMS.slice() },
   { key:'ops', name:'运营', desc:'负责影院、排期、首页、订单履约与上刊交付', builtin:true, perms:['cinema','onboard','schedule','tier','homepage','orders','publish','contract','customer','enterprise','service','cases'] },
-  { key:'finance', name:'财务', desc:'负责返本退款、发票、对账与提现审核', builtin:true, perms:['orders','refund','invoice'] },
+  { key:'finance', name:'财务', desc:'负责退款、发票、对账与提现审核', builtin:true, perms:['orders','refund','invoice'] },
   { key:'cs', name:'客服', desc:'负责在线客服、订单与包场跟进、客户查询', builtin:true, perms:['orders','package','customer','service'] },
   { key:'sales', name:'销售负责人', desc:'负责分销、客户、包场询价与销售报表', builtin:true, perms:['package','customer','distribution','benefits','cases'] },
 ];
@@ -6619,7 +6560,7 @@ function saveBizMaterialSpec(){
 <script>
 /* =====================================================
    模块：数据字典（系统设置）
-   企业类型、所属行业、退款原因、退款驳回原因、企业认证审核驳回原因、影院入驻审核驳回原因、权益福利商家类型
+   企业类型、所属行业、退款原因、退款驳回原因、企业认证审核驳回原因、影院入驻审核驳回原因、权益福利商家类型、投放案例分类
 ===================================================== */
 const DICT_MODULES = [
   { key:'enterpriseType',   label:'企业类型',         desc:'用于小程序用户企业认证时选择', ico:'▣' },
@@ -6627,6 +6568,7 @@ const DICT_MODULES = [
   { key:'refundReason',     label:'退款原因',         desc:'用于小程序用户在退款时选择',    ico:'↶' },
   { key:'refundRejectReason', label:'退款驳回原因',    desc:'用于后台审核退款订单时选择',    ico:'✕' },
   { key:'benefitType',      label:'权益福利商家类型', desc:'用于后台添加权益福利商家时选择', ico:'▤' },
+  { key:'caseType',         label:'投放案例分类',    desc:'用于后台添加投放案例时选择', ico:'▶' },
   { key:'certRejectReason', label:'企业认证审核驳回原因', desc:'用于后台审核企业认证时选择',    ico:'⛔' },
   { key:'onboardRejectReason', label:'影院入驻审核驳回原因', desc:'用于后台审核影院入驻时选择', ico:'⊘' },
 ];
@@ -6637,6 +6579,7 @@ const DICT_SEED = {
   refundReason: ['档期冲突，无法按期投放','投放计划有变','预算调整','重复下单','其他原因'],
   refundRejectReason: ['订单已进入上刊流程，不可退款','已超过退款截止日','退款申请资料不完整','订单状态不符合退款条件'],
   benefitType: ['餐饮饮品','餐饮','零售美妆','咖啡','数码','酒店住宿','休闲娱乐','运动健身','生活服务','其他'],
+  caseType: ['汽车','餐饮','美妆','数码','食品饮料','生活服务'],
   certRejectReason: ['营业执照信息不完整','营业执照经营范围与广告投放不符','法人信息与实名信息不一致','资质材料已过期'],
   onboardRejectReason: ['影院资质信息不完整','影院信息与实际不符','营业执照或场地证明无效','其他原因'],
 };
@@ -6725,14 +6668,14 @@ function removeDictItem(key, idx){
 /* =====================================================
    模块：客服配置（客服中心）
 ===================================================== */
-let serviceConfig = { phone:'400-800-8899', workTime:'每日 09:00–22:00' };
+let serviceConfig = { phone:'400-800-8899', workTime:'每日 09:00–22:00', greeting:'您好，我是景想映刻 AI 小助手，很高兴为您服务。请直接描述您的问题，我会尽快为您解答；如需人工服务，可点击下方「转人工客服」。' };
 
 const QA_SEED = [
-  { id:'QA001', q:'如何购买影院映前广告？', a:'进入小程序选择影院与档期，填写投放周期并上传素材即可下单；付款完成后客服将尽快确认到账并安排上刊。', keywords:'购买,下单,投放,怎么买', status:'enabled', hits:128, updatedAt:'2026/09/20 10:12' },
-  { id:'QA002', q:'包场如何预约？', a:'进入「包场询价」提交人数、日期与用途，客服将与您沟通档期并发送报价，确认后即可签约锁定场地。', keywords:'包场,预约,团建,求婚', status:'enabled', hits:96, updatedAt:'2026/09/18 15:40' },
-  { id:'QA003', q:'退款什么时候到账？', a:'退款申请审核通过后 3–5 个工作日内原路退回，可在「我的-退款记录」中查看进度。', keywords:'退款,到账,退钱', status:'enabled', hits:74, updatedAt:'2026/09/15 09:00' },
-  { id:'QA004', q:'广告素材有什么要求？', a:'请上传 15 秒、1080P 及以上分辨率的视频，大小不超过 200MB，支持 MP4 / MOV 格式。', keywords:'素材,分辨率,格式,视频', status:'enabled', hits:61, updatedAt:'2026/09/12 16:22' },
-  { id:'QA005', q:'企业客户如何申请专属折扣？', a:'企业客户完成资质认证后，可由运营在客户档案中开通专属折扣并设置比例，下单自动按折扣价结算。', keywords:'企业,折扣,认证', status:'disabled', hits:38, updatedAt:'2026/09/08 11:30' },
+  { id:'QA001', q:'如何购买影院映前广告？', a:'进入小程序选择影院与档期，填写投放周期并上传素材即可下单；付款完成后客服将尽快确认到账并安排上刊。', keywords:'购买,下单,投放,怎么买', status:'enabled', recommended:true, hits:128, updatedAt:'2026/09/20 10:12' },
+  { id:'QA002', q:'包场如何预约？', a:'进入「包场询价」提交人数、日期与用途，客服将与您沟通档期并发送报价，确认后即可签约锁定场地。', keywords:'包场,预约,团建,求婚', status:'enabled', recommended:true, hits:96, updatedAt:'2026/09/18 15:40' },
+  { id:'QA003', q:'退款什么时候到账？', a:'退款申请审核通过后 3–5 个工作日内原路退回，可在「我的-退款记录」中查看进度。', keywords:'退款,到账,退钱', status:'enabled', recommended:false, hits:74, updatedAt:'2026/09/15 09:00' },
+  { id:'QA004', q:'广告素材有什么要求？', a:'请上传 15 秒、1080P 及以上分辨率的视频，大小不超过 200MB，支持 MP4 / MOV 格式。', keywords:'素材,分辨率,格式,视频', status:'enabled', recommended:false, hits:61, updatedAt:'2026/09/12 16:22' },
+  { id:'QA005', q:'企业客户如何申请专属折扣？', a:'企业客户完成资质认证后，可由运营在客户档案中开通专属折扣并设置比例，下单自动按折扣价结算。', keywords:'企业,折扣,认证', status:'disabled', recommended:false, hits:38, updatedAt:'2026/09/08 11:30' },
 ];
 let qaList = JSON.parse(JSON.stringify(QA_SEED));
 let qaSeq = 6;
@@ -6753,6 +6696,23 @@ function saveServicePhone(){
   renderPage('service');
 }
 
+function openGreetingConfig(){
+  openInputDialog({
+    title:'客服配置 · 自动打招呼', ico:'💬', icoStyle:'background:var(--cyan-soft);color:var(--cyan)',
+    desc:'用户进入小程序在线客服时，机器人自动发送的欢迎语。',
+    label:'自动打招呼内容', required:true, multiline:true, minHeight:'110', placeholder:'请输入自动打招呼内容', value:serviceConfig.greeting,
+    confirmLabel:'保存',
+    onConfirm:function(val){
+      const v = val.trim();
+      if(!v){ toast2('请输入打招呼内容'); return; }
+      serviceConfig.greeting = v;
+      closeDialog();
+      toast2('自动打招呼内容已保存');
+      renderPage('service');
+    }
+  });
+}
+
 function qaStatusChips(){
   const opts = [{k:'all',label:'全部状态'},{k:'enabled',label:'启用'},{k:'disabled',label:'停用'}];
   return opts.map(x=>'<button type="button" class="chip'+(qaFilter.status===x.k?' active':'')+'" onclick="setQaStatus(\''+x.k+'\')">'+x.label+'</button>').join('');
@@ -6768,6 +6728,7 @@ function qaRow(qa){
     '<td class="muted" style="white-space:nowrap">'+esc(qa.updatedAt)+'</td>'+
     '<td><div class="row-actions">'+
       '<button class="act-btn" title="编辑" onclick="editQa(\''+qa.id+'\')">'+EDIT_SVG+'</button>'+
+      '<button class="act-btn" style="'+(qa.recommended?'color:var(--gold)':'')+'" title="'+(qa.recommended?'取消推荐':'设为推荐')+'" onclick="toggleQaRecommend(\''+qa.id+'\')"><svg viewBox="0 0 24 24" fill="'+(qa.recommended?'currentColor':'none')+'" stroke="currentColor" stroke-width="1.7"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 18.8 6.2 20.9l1.1-6.5L2.6 9.8l6.5-.9z"/></svg></button>'+
       '<button class="act-btn '+(on?'danger':'')+'" title="'+(on?'停用':'启用')+'" onclick="toggleQa(\''+qa.id+'\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">'+(on?'<circle cx="12" cy="12" r="8.5"/><path d="M5.5 5.5l13 13"/>':'<circle cx="12" cy="12" r="8.5"/><path d="M8 12h8"/>')+'</svg></button>'+
       '<button class="act-btn danger" title="删除" onclick="delQa(\''+qa.id+'\')">'+TRASH_SVG+'</button>'+
     '</div></td>'+
@@ -6805,6 +6766,10 @@ function saveQa(id){
 function toggleQa(id){
   const qa = qaList.find(x=>x.id===id);
   if(qa){ qa.status = qa.status==='enabled'?'disabled':'enabled'; renderPage('service'); }
+}
+function toggleQaRecommend(id){
+  const qa = qaList.find(x=>x.id===id);
+  if(qa){ qa.recommended = !qa.recommended; toast2(qa.recommended?'已设为推荐':'已取消推荐'); renderPage('service'); }
 }
 function delQa(id){
   qaList = qaList.filter(x=>x.id!==id);
@@ -6856,6 +6821,7 @@ function qaTab(){
     '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="qa-search" placeholder="搜索问题 / 答案 / 关键词…" value="'+esc(qaFilter.q)+'" oninput="setQaQ(this.value)"></div>'+
     '<div class="chips">'+qaStatusChips()+'</div>'+
     '<div class="spacer"></div>'+
+    '<button class="btn btn-ghost" onclick="openGreetingConfig()">💬 客服配置</button>'+
     '<button class="btn btn-primary" onclick="editQa(null)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>新增问答</button>'+
   '</div>'+
   '<div class="panel reveal" style="animation-delay:.12s"><div class="panel-head"><h3>自动应答 QA</h3><span class="count">共 '+list.length+' 条 · 命中即自动回复</span></div>'+
@@ -6928,8 +6894,8 @@ function dashFunnelHTML(){
 
 function dashTodoHTML(){
   const items = [
-    { label:'待审核退款',    sub:'返本与退款 · 财务中心', n: refunds.filter(r=>r.status==='pending').length, page:'refund', ico:'↩', bg:'var(--amber-soft)', color:'var(--gold)' },
-    { label:'待审核钱包提现', sub:'返本与退款 · 财务中心', n: wWithdraws.filter(w=>w.status==='pending').length, page:'refund', ico:'¥', bg:'var(--amber-soft)', color:'var(--gold)' },
+    { label:'待审核退款',    sub:'提现与退款 · 财务中心', n: refunds.filter(r=>r.status==='pending').length, page:'refund', ico:'↩', bg:'var(--amber-soft)', color:'var(--gold)' },
+    { label:'待审核钱包提现', sub:'提现与退款 · 财务中心', n: wWithdraws.filter(w=>w.status==='pending').length, page:'refund', ico:'¥', bg:'var(--amber-soft)', color:'var(--gold)' },
     { label:'待开具发票',    sub:'发票管理 · 财务中心',   n: invoices.filter(i=>i.status==='processing').length, page:'invoice', ico:'▤', bg:'var(--cyan-soft)', color:'var(--cyan)' },
     { label:'待跟进包场询价', sub:'留言与报价 · 订单与交付', n: pkgs.filter(p=>['pending','following'].includes(p.status)).length, page:'package', ico:'◉', bg:'var(--blue-soft)', color:'var(--blue)' },
     { label:'待签署合同',    sub:'合同管理 · 订单与交付', n: contracts.filter(c=>c.status==='draft').length, page:'contract', ico:'✍', bg:'var(--gold-soft)', color:'var(--gold)' },
@@ -6950,9 +6916,6 @@ PAGE.dashboard = function(){
   const rate = valid.length ? Math.round(launched/valid.length*100) : 0;
   const onCinemas = cinemas.filter(c=>c.status==='on').length;
   const totalCinemas = cinemas.length;
-  const pendingPrincipal = equities.filter(e=>e.status!=='returned').reduce((s,e)=>s+e.principal,0);
-  const returnedPrincipal = equities.filter(e=>e.status==='returned').reduce((s,e)=>s+e.principal,0);
-  const pendingCount = equities.filter(e=>e.status!=='returned').length;
 
   const top = cinemas.slice().sort((a,b)=>b.boxOffice-a.boxOffice).slice(0,5);
   const rankRows = top.map((c,i)=>'<div class="rank-row">'+
@@ -6964,14 +6927,13 @@ PAGE.dashboard = function(){
   return ''+
   '<div class="page-head reveal">'+
     '<div class="page-title"><span class="eyebrow">工作台</span>数据看板</div>'+
-    '<p class="page-desc">聚合营收、上刊率、影院热度与返本资金规模等核心指标，掌握平台整体经营态势。</p>'+
+    '<p class="page-desc">聚合营收、上刊率、影院热度等核心指标，掌握平台整体经营态势。</p>'+
   '</div>'+
 
-  '<div class="kpi-grid">'+
+  '<div class="kpi-grid" style="grid-template-columns:repeat(3,1fr)">'+
     '<div class="kpi reveal" style="animation-delay:.03s"><div class="k-top"><span class="k-label">累计营收</span><span class="k-ico" style="background:var(--cyan-soft);color:var(--cyan)">¥</span></div><div class="k-value">¥'+gmv.toLocaleString()+'</div><div class="k-sub">累计已入账 <b class="up">¥'+inflow.toLocaleString()+'</b></div></div>'+
     '<div class="kpi reveal" style="animation-delay:.06s"><div class="k-top"><span class="k-label">上刊率</span><span class="k-ico" style="background:var(--blue-soft);color:var(--blue)">▤</span></div><div class="k-value">'+rate+'<small>%</small></div><div class="k-sub">上刊中 '+orders.filter(o=>o.key==='progress').length+' · 已完成 '+orders.filter(o=>o.key==='done').length+' / 有效 '+valid.length+' 单</div></div>'+
     '<div class="kpi reveal" style="animation-delay:.09s"><div class="k-top"><span class="k-label">在架影院</span><span class="k-ico" style="background:var(--gold-soft);color:var(--gold)">◉</span></div><div class="k-value">'+onCinemas+'<small>家</small></div><div class="k-sub">共 '+totalCinemas+' 家 · '+(totalCinemas-onCinemas)+' 家下架</div></div>'+
-    '<div class="kpi reveal" style="animation-delay:.12s"><div class="k-top"><span class="k-label">返本资金规模</span><span class="k-ico" style="background:var(--green-soft);color:var(--green)">◱</span></div><div class="k-value">¥'+pendingPrincipal.toLocaleString()+'</div><div class="k-sub">待返 '+pendingCount+' 笔 · 已返还 ¥'+returnedPrincipal.toLocaleString()+'</div></div>'+
   '</div>'+
 
   '<div class="dash-grid">'+
