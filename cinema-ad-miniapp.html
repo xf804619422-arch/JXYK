@@ -671,20 +671,6 @@
         <div class="banner"><div class="banner-ico">✦</div><div><strong>佣金规则</strong><p>推广订单支付成功且未退款后，按订单实付金额 × 8% 自动计入可提现佣金。</p></div></div></div>
         </main>
 
-        <main id="screen-dist-apply" class="screen">
-          <div class="screen-head"><button class="back" id="dist-apply-back">‹</button><div><h2>申请开通分销</h2><small>填写申请说明 · 提交后等待审核</small></div></div>
-          <div class="dist-gate" style="margin:-3px 0 14px">
-            <div class="dist-gate-ico">↗</div>
-            <h3>成为分销员，推广赚佣金</h3>
-            <p>通过专属分享码推广影院广告，客户扫码完成支付后即可按规则获得推广佣金。</p>
-          </div>
-          <div class="form-card">
-            <div class="field"><label>申请说明</label><textarea id="dist-apply-note" placeholder="请简要说明你的推广渠道、客户资源等，便于平台审核"></textarea></div>
-          </div>
-          <button class="primary cyan full" id="dist-apply-submit">提交审核</button>
-          <p class="subline" style="text-align:center;margin-top:10px">提交后平台将在 1–3 个工作日内完成审核</p>
-        </main>
-
         <main id="screen-dist-withdraw" class="screen">
           <div class="screen-head"><button class="back" data-go="distribution">‹</button><div><h2>申请提现</h2><small>佣金提现至收款账户</small></div></div>
           <div id="dist-withdraw-content">
@@ -1438,30 +1424,10 @@
       let body=invoiceInfoHTML(o)+info;
       if(st==='pending'){
         body+=`<button class="primary cyan full" id="inv-apply">申请开票</button>`;
-      }else if(st==='issued'){
-        body+=`<button class="primary cyan full" id="inv-view-pdf">查看发票 PDF</button><button class="secondary full" id="inv-save-pdf">保存发票 PDF</button>`;
       }
       $('#invoice-detail-content').innerHTML=body;
       const apply=$('#inv-apply');if(apply)apply.onclick=()=>{state.invoiceFrom='invoice';go('invoice')};
       const contractBtn=$('#invoice-detail-content #od-contract');if(contractBtn)contractBtn.onclick=()=>{state.orderDetailId=o.id;go('order-contract')};
-      const view=$('#inv-view-pdf');if(view)view.onclick=()=>openInvoicePdf(o);
-      const save=$('#inv-save-pdf');if(save)save.onclick=()=>toast('发票 PDF 已保存到本地');
-    }
-    function openInvoicePdf(o){
-      const inv=o.invoice;
-      openModal(`<div class="modal-head"><h3>电子发票</h3><button class="close" data-close>×</button></div>
-        <div class="invoice-pdf">
-          <div class="pdf-head"><b>增值税电子普通发票</b><span>发票号码：${inv.no||'INV000000'}</span></div>
-          <div class="pdf-row"><span>购买方</span><b>${inv.title}</b></div>
-          <div class="pdf-row"><span>税号</span><b>${inv.taxNo||'—'}</b></div>
-          <div class="pdf-row"><span>销售方</span><b>映刻（上海）数字传媒有限公司</b></div>
-          <div class="pdf-row"><span>项目</span><b>影院映前广告投放服务</b></div>
-          <div class="pdf-row"><span>开票日期</span><b>${inv.time||'—'}</b></div>
-          <div class="pdf-amount"><span>价税合计</span><strong>¥${o.price.toLocaleString()}</strong></div>
-          <div class="pdf-stamp"><span>电子发票<br>专用章</span></div>
-        </div>
-        <button class="primary cyan full" id="pdf-save">保存 PDF</button>`,true);
-      $('#pdf-save').onclick=()=>{closeModal();toast('发票 PDF 已保存到本地')};
     }
     function renderCoupons(){$('#coupon-list').innerHTML=coupons.map((c,i)=>`<div class="coupon-card form-card" style="position:relative;overflow:hidden;border-left:5px solid ${c.color};"><div class="cart-top"><div><span class="tag">${c.type}</span><h3 style="font-size:14px;margin:8px 0 3px">${c.name}</h3><div class="cart-meta">${c.shop}<br>有效期 ${c.valid}</div></div><div style="font-size:25px">♧</div></div><button class="primary cyan full" style="margin-top:10px" data-claim="${i}">立即领取</button></div>`).join('');$$('[data-claim]').forEach(b=>b.onclick=()=>{b.textContent='已领取 ✓';b.disabled=true;b.classList.remove('cyan');toast('优惠券已放入卡券包')})}
     function renderMe(){
@@ -1498,21 +1464,39 @@
       const d=DISTRIBUTION[state.identity];
       const bb=$('#distrib-back');if(bb)bb.dataset.go=state.distribBack||'me';
       if(d.status!=='approved'){
-        const cfg=d.status==='pending'
-          ?{ico:'◷',title:'开通申请审核中',desc:'已提交分销开通申请，平台将在 1–3 个工作日内完成审核，审核通过后即可开始推广。',btn:''}
-          :d.status==='rejected'
-            ?{ico:'✕',title:'开通申请未通过',desc:'驳回原因：'+(d.rejectReason||'申请材料不完整，请核实后重新提交'),btn:'修改并重新申请',note:'分销功能仅对个人身份开放'}
-            :{ico:'↗',title:'成为分销员，推广赚佣金',desc:'通过专属分享码推广影院广告，客户完成支付后即可按规则获得推广佣金。',btn:'一键申请开通分销',note:'分销功能仅对个人身份开放'};
+        if(d.status==='pending'){
+          $('#distribution-content').innerHTML=`
+            <div class="dist-gate">
+              <div class="dist-gate-ico">◷</div>
+              <h3>开通申请审核中</h3>
+              <p>已提交分销开通申请，平台将在 1–3 个工作日内完成审核，审核通过后即可开始推广。</p>
+            </div>
+            <div class="banner" style="margin-top:13px"><div class="banner-ico">✦</div><div><strong>佣金规则</strong><p>${d.rule.text}。支付成功且未退款的订单计入佣金，退款将同步冻结或扣回。</p></div></div>`;
+          return;
+        }
+        const p=PROFILES[state.identity];
+        const rejectBanner = d.status==='rejected' ? `<div class="banner" style="background:#fdf0ee;border-color:#f6cfc7;margin-bottom:13px"><div class="banner-ico">✕</div><div><strong>申请未通过</strong><p>${d.rejectReason||'申请材料不完整，请核实后重新提交'}</p></div></div>` : '';
         $('#distribution-content').innerHTML=`
-          <div class="dist-gate">
-            <div class="dist-gate-ico">${cfg.ico}</div>
-            <h3>${cfg.title}</h3>
-            <p>${cfg.desc}</p>
-            ${cfg.btn?`<button class="primary cyan full" id="dist-apply">${cfg.btn}</button>`:''}
-            ${cfg.note?`<p class="subline" style="text-align:center">${cfg.note}</p>`:''}
+          ${rejectBanner}
+          <div class="form-card">
+            <div class="field"><label>姓名 <b style="color:#ee6f65">*</b></label><input id="dist-apply-name" value="${p.name}" placeholder="请输入姓名"></div>
+            <div class="field"><label>联系方式 <b style="color:#ee6f65">*</b></label><input id="dist-apply-phone" value="${d.applyPhone||''}" placeholder="请输入手机号"></div>
+            <div class="field"><label>申请说明 <b style="color:#ee6f65">*</b></label><textarea id="dist-apply-note" placeholder="请简要说明你的推广渠道、客户资源等，便于平台审核">${d.applyNote||''}</textarea></div>
           </div>
-          <div class="banner" style="margin-top:13px"><div class="banner-ico">✦</div><div><strong>佣金规则</strong><p>${d.rule.text}。支付成功且未退款的订单计入佣金，退款将同步冻结或扣回。</p></div></div>`;
-        const ap=$('#dist-apply');if(ap)ap.onclick=()=>{go('dist-apply')};
+          <button class="primary cyan full" id="dist-apply-submit">提交审核</button>
+          <p class="subline" style="text-align:center;margin-top:10px">提交后平台将在 1–3 个工作日内完成审核</p>`;
+        $('#dist-apply-submit').onclick=()=>{
+          const name=$('#dist-apply-name').value.trim();
+          const phone=$('#dist-apply-phone').value.trim();
+          const note=$('#dist-apply-note').value.trim();
+          if(!name){toast('请填写姓名');return;}
+          if(!phone){toast('请填写联系方式');return;}
+          if(!note){toast('请填写申请说明');return;}
+          d.applyName=name;d.applyPhone=phone;d.applyNote=note;
+          d.status='pending';
+          renderDistribution();
+          toast('分销开通申请已提交，等待审核');
+        };
         return;
       }
       const month=d.perf.month,p=d.perf[state.distPerf]||month;
@@ -1820,7 +1804,7 @@
     function bind(){
       $('#movie-list-search').addEventListener('input',renderMovies);
       document.addEventListener('click',e=>{const goBtn=e.target.closest('[data-go]');if(goBtn){if(goBtn.dataset.movie)state.movie=goBtn.dataset.movie;if(goBtn.dataset.go==='distribution'&&!['dist-withdraw','dist-account','dist-withdraw-record','dist-records','dist-customers'].includes(state.screen))state.distribBack=state.screen;go(goBtn.dataset.go);return}const envBtn=e.target.closest('[data-env]');if(envBtn){viewEnvPhoto(+envBtn.dataset.env);return}const wkBtn=e.target.closest('[data-week]');if(wkBtn){toggleWeek(wkBtn.dataset.week);return}const action=e.target.closest('[data-action]');if(action){if(action.dataset.action==='toast')toast(action.dataset.message||'操作成功');if(action.dataset.action==='share')toast('推广工具已生成');if(action.dataset.action==='upload-license')toast('演示：已选择证照文件');if(action.dataset.action==='upload-attach')toast('演示：已选择需求附件');if(action.dataset.action==='clear-search'){$('#cinema-search').value='';renderCinemas()}if(action.dataset.action==='clear-region'){state.region=null;updateRegionBar();renderCinemas()}if(action.dataset.action==='clear-filter'){state.region=null;state.tier='all';$('#cinema-search').value='';updateRegionBar();updateTierBar();renderCinemas()}if(action.dataset.action==='clear-benefit-region'){benefitProvince=null;benefitCity=null;benefitDistrict=null;updateBenefitFilterBar();renderBenefits()}return}const pkgOpt=e.target.closest('[data-pkg-opt]');if(pkgOpt){const v=pkgOpt.dataset.pkgOpt;if(v==='全国'){state.pkgRegion=null;closeModal();go('pkg-cinema');}else if(pkgRegionLevel==='province'){pkgRegionPick.province=v;pkgRegionLevel='city';renderPkgRegionLevel();}else if(pkgRegionLevel==='city'){pkgRegionPick.city=v;pkgRegionLevel='district';renderPkgRegionLevel();}else{pkgRegionPick.district=v;state.pkgRegion={province:pkgRegionPick.province,city:pkgRegionPick.city,district:v};closeModal();go('pkg-cinema');}return}const pkgLvl=e.target.closest('[data-pkg-level]');if(pkgLvl){const lv=pkgLvl.dataset.pkgLevel;if(lv==='province')pkgRegionLevel='province';else if(lv==='city'&&pkgRegionPick.province)pkgRegionLevel='city';else if(lv==='district'&&pkgRegionPick.city)pkgRegionLevel='district';renderPkgRegionLevel();return}const rOpt=e.target.closest('[data-opt]');if(rOpt){const v=rOpt.dataset.opt;if(v==='全国'){state.region=null;updateRegionBar();renderCinemas();closeModal();}else if(regionLevel==='province'){regionPick.province=v;regionLevel='city';renderRegionLevel();}else if(regionLevel==='city'){regionPick.city=v;regionLevel='district';renderRegionLevel();}else{regionPick.district=v;state.region={province:regionPick.province,city:regionPick.city,district:v};updateRegionBar();renderCinemas();closeModal();}return;}const rLvl=e.target.closest('[data-level]');if(rLvl){const lv=rLvl.dataset.level;if(lv==='province')regionLevel='province';else if(lv==='city'&&regionPick.province)regionLevel='city';else if(lv==='district'&&regionPick.city)regionLevel='district';renderRegionLevel();return;}const tOpt=e.target.closest('[data-tier]');if(tOpt){state.tier=tOpt.dataset.tier;updateTierBar();renderCinemas();closeModal();return;}const locBtn=e.target.closest('[data-locate]');if(locBtn){state.region={...currentLocation};updateRegionBar();renderCinemas();closeModal();return;}const bp=e.target.closest('[data-bpick]');if(bp){const v=bp.dataset.bpick;if(benefitPickerKey==='province'){benefitProvince=(v==='全部')?null:v;benefitCity=null;benefitDistrict=null;}else if(benefitPickerKey==='city'){benefitCity=(v==='全部')?null:v;benefitDistrict=null;}else{benefitDistrict=(v==='全部')?null:v;}updateBenefitFilterBar();renderBenefits();closeModal();return;}if(e.target.matches('[data-close]')||e.target=== $('#modal-backdrop'))closeModal();if(e.target.matches('[data-upload]')){closeModal();toast('素材已提交，等待人工审核');}if(e.target.matches('#submit-package'))submitPackage();if(e.target.matches('[data-cert-submit]')){const wasApproved=state.certStatus==='approved';state.certStatus='pending';certEditing=false;renderCertification();toast(wasApproved?'企业信息变更已提交，等待重新审核':'认证资料已提交，等待审核')}if(e.target.matches('[data-cert-edit]')){certEditing=true;renderCertification()}if(e.target.matches('[data-cert-cancel]')){certEditing=false;renderCertification()}if(e.target.matches('[data-ob-submit]')){obSubmit()}if(e.target.matches('[data-ob-edit]')){cinemaOnboard.editing=true;renderOnboard()}if(e.target.matches('[data-ob-cancel]')){cinemaOnboard.editing=false;renderOnboard()}if(e.target.matches('#add-cart'))addToCart();if(e.target.matches('#buy-now'))addToCart(true);if(e.target.matches('#checkout')){state.contractSigned=false;state.checkoutBack='cart';go('checkout')}if(e.target.matches('#checkout-pay')){if(state.contractSigned)openPurchaseNotice();else toast('请先签署电子合同');}});
-      $('#cal-prev').onclick=()=>shiftMonth(-1);$('#cal-next').onclick=()=>shiftMonth(1);$('#home-search-submit').onclick=searchHome;$('#region-bar').onclick=openRegionPicker;$('#tier-bar').onclick=openTierPicker;$('#bf-province').onclick=()=>openBenefitPicker('province');$('#bf-city').onclick=()=>openBenefitPicker('city');$('#bf-district').onclick=()=>openBenefitPicker('district');$('#home-search').addEventListener('keydown',e=>{if(e.key==='Enter')searchHome()});$('#cinema-search').addEventListener('input',renderCinemas);$('#clear-movie').onclick=()=>{state.movie='';renderCinemas()};$$('.filter').forEach(b=>b.onclick=()=>{$$('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast(`已切换：${b.textContent}`)});$$('.order-tab').forEach(b=>b.onclick=()=>{$$('.order-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.orderStatus=b.dataset.status;renderOrders()});$$('.radio').forEach(b=>b.onclick=()=>{b.parentElement.querySelectorAll('.radio').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$$('[data-case-filter]').forEach(b=>b.onclick=()=>{currentCaseFilter=b.dataset.caseFilter;renderCases()});$$('[data-banner]').forEach(b=>b.onclick=()=>setBanner(+b.dataset.banner));$$('#dev-panel [data-dev]').forEach(b=>b.onclick=()=>devAction(b.dataset.dev));$('#pkg-cinema-search-page').addEventListener('input',renderPkgCinema);$('#pkg-region-bar-page').onclick=openPkgRegionPicker;$$('#invoice-tabs .inv-tab').forEach(b=>b.onclick=()=>{state.invoiceTab=b.dataset.invTab;renderMyInvoice()});$('#dp-toggle').onclick=()=>{const p=$('#dev-panel');p.classList.toggle('collapsed');$('#dp-toggle').textContent=p.classList.contains('collapsed')?'+':'—'};$('#dist-apply-submit').onclick=()=>{const d=DISTRIBUTION[state.identity];const note=$('#dist-apply-note').value.trim();if(!note){toast('请填写申请说明');return}d.applyNote=note;d.status='pending';$('#dist-apply-note').value='';go('distribution');toast('分销开通申请已提交，等待审核')};$('#dist-apply-back').onclick=()=>go('distribution');setInterval(()=>{if(state.screen==='home')setBanner(state.banner+1)},4800);
+      $('#cal-prev').onclick=()=>shiftMonth(-1);$('#cal-next').onclick=()=>shiftMonth(1);$('#home-search-submit').onclick=searchHome;$('#region-bar').onclick=openRegionPicker;$('#tier-bar').onclick=openTierPicker;$('#bf-province').onclick=()=>openBenefitPicker('province');$('#bf-city').onclick=()=>openBenefitPicker('city');$('#bf-district').onclick=()=>openBenefitPicker('district');$('#home-search').addEventListener('keydown',e=>{if(e.key==='Enter')searchHome()});$('#cinema-search').addEventListener('input',renderCinemas);$('#clear-movie').onclick=()=>{state.movie='';renderCinemas()};$$('.filter').forEach(b=>b.onclick=()=>{$$('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');toast(`已切换：${b.textContent}`)});$$('.order-tab').forEach(b=>b.onclick=()=>{$$('.order-tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.orderStatus=b.dataset.status;renderOrders()});$$('.radio').forEach(b=>b.onclick=()=>{b.parentElement.querySelectorAll('.radio').forEach(x=>x.classList.remove('active'));b.classList.add('active')});$$('[data-case-filter]').forEach(b=>b.onclick=()=>{currentCaseFilter=b.dataset.caseFilter;renderCases()});$$('[data-banner]').forEach(b=>b.onclick=()=>setBanner(+b.dataset.banner));$$('#dev-panel [data-dev]').forEach(b=>b.onclick=()=>devAction(b.dataset.dev));$('#pkg-cinema-search-page').addEventListener('input',renderPkgCinema);$('#pkg-region-bar-page').onclick=openPkgRegionPicker;$$('#invoice-tabs .inv-tab').forEach(b=>b.onclick=()=>{state.invoiceTab=b.dataset.invTab;renderMyInvoice()});$('#dp-toggle').onclick=()=>{const p=$('#dev-panel');p.classList.toggle('collapsed');$('#dp-toggle').textContent=p.classList.contains('collapsed')?'+':'—'};setInterval(()=>{if(state.screen==='home')setBanner(state.banner+1)},4800);
     }
     renderHome();renderCinemas();renderCoupons();renderOrders();updateRegionBar();updateTierBar();bind();go('home');
   </script>

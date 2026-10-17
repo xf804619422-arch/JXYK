@@ -4833,12 +4833,12 @@ const WITHDRAW_STATUS = {
 };
 
 const DISTRIBUTOR_SEED = [
-  { id:'FX20260801001', name:'林知远', phone:'138****2088', inviteCode:'YX2026-0831', status:'approved', bind:3, orders:12, gmv:108000, settled:1792, available:1280, pending:620, applyAt:'2026/08/01 10:20', applyNote:'长期从事品牌营销工作，希望推广影院映前广告资源。' },
-  { id:'FX20260815002', name:'陈启明', phone:'139****6612', inviteCode:'YX2026-1508', status:'approved', bind:2, orders:7, gmv:52100, settled:1024, available:960, pending:210, applyAt:'2026/08/15 14:05', applyNote:'主营传媒业务，有稳定客户资源，申请开通分销资格。' },
-  { id:'FX20260822003', name:'刘一鸣', phone:'136****5521', inviteCode:'YX2026-2208', status:'approved', bind:1, orders:3, gmv:15600, settled:320, available:180, pending:0, applyAt:'2026/08/22 09:12', applyNote:'有本地商户资源，希望合作推广映前广告。' },
-  { id:'FX20260901004', name:'王强', phone:'137****3309', inviteCode:'', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/01 16:40', applyNote:'希望通过分享推广赚取佣金，请审核开通。' },
-  { id:'FX20260910005', name:'王若琳', phone:'137****3309', inviteCode:'', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/10 11:30', applyNote:'广告公司从业者，客户以本地品牌为主。' },
-  { id:'FX20260918006', name:'孙浩', phone:'134****9982', inviteCode:'YX2026-1809', status:'frozen', bind:1, orders:2, gmv:8600, settled:0, available:0, pending:96, applyAt:'2026/09/02 10:00', applyNote:'曾服务多个连锁品牌，希望对接影院广告资源。', freezeReason:'疑似刷单 · 关联账号异常' },
+  { id:'FX20260801001', nickname:'林知远', mobile:'138****2088', name:'林知远', phone:'138****2088', status:'approved', bind:3, orders:12, gmv:108000, settled:1792, available:1280, pending:620, applyAt:'2026/08/01 10:20', applyNote:'长期从事品牌营销工作，希望推广影院映前广告资源。' },
+  { id:'FX20260815002', nickname:'陈启明', mobile:'139****6612', name:'陈启明', phone:'139****6612', status:'approved', bind:2, orders:7, gmv:52100, settled:1024, available:960, pending:210, applyAt:'2026/08/15 14:05', applyNote:'主营传媒业务，有稳定客户资源，申请开通分销资格。' },
+  { id:'FX20260822003', nickname:'一鸣', mobile:'136****5521', name:'刘一鸣', phone:'136****5521', status:'approved', bind:1, orders:3, gmv:15600, settled:320, available:180, pending:0, applyAt:'2026/08/22 09:12', applyNote:'有本地商户资源，希望合作推广映前广告。' },
+  { id:'FX20260901004', nickname:'强仔', mobile:'135****8765', name:'王强', phone:'137****3309', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/01 16:40', applyNote:'希望通过分享推广赚取佣金，请审核开通。' },
+  { id:'FX20260910005', nickname:'若琳', mobile:'137****3309', name:'王若琳', phone:'137****3309', status:'pending', bind:0, orders:0, gmv:0, settled:0, available:0, pending:0, applyAt:'2026/09/10 11:30', applyNote:'广告公司从业者，客户以本地品牌为主。' },
+  { id:'FX20260918006', nickname:'浩子', mobile:'134****9982', name:'孙浩', phone:'134****9982', status:'frozen', bind:1, orders:2, gmv:8600, settled:0, available:0, pending:96, applyAt:'2026/09/02 10:00', applyNote:'曾服务多个连锁品牌，希望对接影院广告资源。', freezeReason:'疑似刷单 · 关联账号异常' },
 ];
 const LEDGER_SEED = [
   { id:'FX20260829001', dist:'林知远', customer:'苏州拾光文化传播', product:'万达影城（长沙开福店）· 映前广告', amount:12800, commission:1024, status:'settled', time:'2026/08/29 12:00' },
@@ -4893,9 +4893,11 @@ function distRow(d){
           : '')+
   '</div>';
   return '<tr>'+
-    '<td><div class="dist-cell"><div class="dist-ava">'+esc(d.name[0])+'</div><div><b>'+esc(d.name)+'</b><span class="sub">'+esc(d.phone)+' · 个人身份</span></div></div></td>'+
+    '<td><div class="dist-cell"><div class="dist-ava">'+esc(d.nickname[0])+'</div><b>'+esc(d.nickname)+'</b></div></td>'+
+    '<td class="mono">'+esc(d.mobile)+'</td>'+
+    '<td>'+esc(d.name)+'</td>'+
+    '<td class="mono">'+esc(d.phone)+'</td>'+
     '<td class="muted" style="max-width:220px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(d.applyNote||'—')+'">'+esc(d.applyNote||'—')+'</div></td>'+
-    '<td class="mono">'+(d.inviteCode||'<span class="muted">—</span>')+'</td>'+
     '<td class="mono">'+d.bind+'</td>'+
     '<td class="mono">'+d.orders+'</td>'+
     '<td class="mono" style="white-space:nowrap">¥'+d.gmv.toLocaleString()+'</td>'+
@@ -4908,21 +4910,21 @@ function distListTab(){
   const list = distributors.filter(d=>{
     if(distFilter.status!=='all' && d.status!==distFilter.status) return false;
     if(distFilter.q){
-      const hay=(d.name+d.phone+d.id+(d.inviteCode||'')).toLowerCase();
+      const hay=(d.nickname+d.mobile+d.name+d.phone+d.id).toLowerCase();
       if(!hay.includes(distFilter.q.toLowerCase())) return false;
     }
     return true;
   });
   const rows = list.map(distRow).join('');
-  const empty = list.length ? '' : '<tr><td colspan="9" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的分销员</td></tr>';
+  const empty = list.length ? '' : '<tr><td colspan="11" style="text-align:center;padding:44px;color:var(--faint)">没有匹配的分销员</td></tr>';
   return '<div class="toolbar reveal" style="animation-delay:.06s">'+
-    '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="dist-q" placeholder="搜索姓名 / 手机号 / 编号 / 邀请码…" value="'+esc(distFilter.q)+'" oninput="setDistQ(this.value)"></div>'+
+    '<div class="input"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="dist-q" placeholder="搜索昵称 / 姓名 / 手机号 / 编号…" value="'+esc(distFilter.q)+'" oninput="setDistQ(this.value)"></div>'+
     '<div class="chips">'+distStatusChips()+'</div>'+
   '</div>'+
   '<div class="panel reveal" style="animation-delay:.1s">'+
     '<div class="panel-head"><h3>分销员列表</h3><span class="count">共 '+list.length+' 人</span></div>'+
     '<div class="table-wrap"><table>'+
-      '<thead><tr><th>分销员</th><th>申请说明</th><th>邀请码</th><th>绑定客户</th><th>推广订单</th><th>累计成交</th><th>可提现佣金</th><th>状态</th><th>操作</th></tr></thead>'+
+      '<thead><tr><th>用户昵称</th><th>手机号码</th><th>姓名</th><th>联系方式</th><th>申请说明</th><th>绑定客户</th><th>推广订单</th><th>累计成交</th><th>可提现佣金</th><th>状态</th><th>操作</th></tr></thead>'+
       '<tbody>'+rows+empty+'</tbody>'+
     '</table></div>'+
   '</div>';
@@ -4934,7 +4936,10 @@ function openDistributor(id){
   const head = '<div class="od-status ic-'+(d.status==='approved'?'confirmed':d.status==='frozen'?'cancel':d.status==='pending'?'pending':'closed')+'"><div class="od-status-ico">◌</div><div class="od-status-copy"><b>'+esc(d.name)+'</b><span>'+esc(d.phone)+' · 个人身份分销员</span></div></div>';
   const base = '<div class="od-section"><label>基本信息</label><div class="od-grid">'+
     '<div class="od-item"><label>分销员编号</label><span class="mono">'+esc(d.id)+'</span></div>'+
-    '<div class="od-item"><label>邀请码</label><span class="mono">'+(d.inviteCode||'—')+'</span></div>'+
+    '<div class="od-item"><label>用户昵称</label><span>'+esc(d.nickname)+'</span></div>'+
+    '<div class="od-item"><label>手机号码</label><span class="mono">'+esc(d.mobile)+'</span></div>'+
+    '<div class="od-item"><label>姓名</label><span>'+esc(d.name)+'</span></div>'+
+    '<div class="od-item"><label>联系方式</label><span class="mono">'+esc(d.phone)+'</span></div>'+
     '<div class="od-item"><label>申请时间</label><span>'+esc(d.applyAt)+'</span></div>'+
     '<div class="od-item"><label>状态</label><span class="pill '+st.cls+'">'+st.label+'</span></div>'+
     '<div class="od-item full"><label>申请说明</label><span>'+(d.applyNote?esc(d.applyNote):'<span class="muted">—</span>')+'</span></div>'+
@@ -4951,7 +4956,6 @@ function openDistributor(id){
 function approveDist(id){
   const d = distributors.find(x=>x.id===id); if(!d) return;
   d.status = 'approved';
-  if(!d.inviteCode) d.inviteCode = 'YX'+d.id.replace(/\D/g,'').slice(-6);
   toast2('已通过分销开通申请');
   renderPage('distribution');
 }
